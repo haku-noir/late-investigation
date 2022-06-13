@@ -50,12 +50,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'app.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['./templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -75,7 +75,7 @@ AUTHENTICATION_BACKENDS = (
  'django.contrib.auth.backends.ModelBackend',
 )
 
-WSGI_APPLICATION = 'app.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database
@@ -140,3 +140,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+
+import json
+with open('/workdir/secret.json') as f:
+    secret = json.load(f)
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = secret['web']['client_id']
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = secret['web']['client_secret']
