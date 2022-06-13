@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'social_django'
 ]
 
 MIDDLEWARE = [
@@ -49,12 +50,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'app.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['./templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -62,12 +63,19 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'app.wsgi.application'
+AUTHENTICATION_BACKENDS = (
+ 'social_core.backends.google.GoogleOAuth2',
+ 'django.contrib.auth.backends.ModelBackend',
+)
+
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database
@@ -132,3 +140,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+
+import json
+with open('/workdir/secret.json') as f:
+    secret = json.load(f)
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = secret['web']['client_id']
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = secret['web']['client_secret']

@@ -8,11 +8,12 @@ services:
       - "POSTGRES_PASSWORD=postgres"
 
   app:
-    build: .
+    build: ./app
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/code
+      - ./app:/workdir
     ports:
       - "8000:8000"
     depends_on:
       - db
+    working_dir: /workdir
