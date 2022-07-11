@@ -25,12 +25,14 @@ SECRET_KEY = 'django-insecure-y2ubfaa+%dt-&2a(%dg!tzh%w-8%g#0l36@+33!b9tii^)z*4v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'late_investigation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
