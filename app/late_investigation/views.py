@@ -40,6 +40,6 @@ class AccountRegistration(TemplateView):
 
         else:
             # フォームが有効でない場合
-            print(self.params["account_form"].errors)
+            print(self.params["custom_user_form"].errors)
 
         return render(request, "registration/register.html", context=self.params)
