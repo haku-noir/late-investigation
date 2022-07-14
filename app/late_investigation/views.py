@@ -70,12 +70,14 @@ class UserEdit(TemplateView):
         if self.params["custom_user_edit_form"].is_valid():
             # アカウント情報をDB保存
             custom_user = self.params["custom_user_edit_form"].save()
-            # パスワードをハッシュ化
-            custom_user.set_password(custom_user.password)
-            # ハッシュ化パスワード更新
-            custom_user.save()
+            new_password = self.params["custom_user_edit_form"].cleaned_data.get("new_password")
+            if new_password != "":
+                # パスワードをハッシュ化
+                custom_user.set_password(new_password)
+                # ハッシュ化パスワード更新
+                custom_user.save()
 
-            # アカウント作成情報更新
+            # アカウント編集情報更新
             self.params["AccountChange"] = True
 
         else:

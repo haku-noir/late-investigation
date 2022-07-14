@@ -35,7 +35,7 @@ class CustomUserEditForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30,required=True)
     last_name = forms.CharField(max_length=30,required=True)
     # パスワード入力：非表示対応
-    password = forms.CharField(widget=forms.PasswordInput(),label="パスワード")
+    new_password = forms.CharField(widget=forms.PasswordInput(),label="新しいパスワード",required=False)
 
     def __init__(self, user, *args, **kwargs):
         self.login_user = user
@@ -45,7 +45,7 @@ class CustomUserEditForm(forms.ModelForm):
         # ユーザー認証
         model = CustomUser
         # フィールド指定
-        fields = ('last_name','first_name','number','username','email','password',)
+        fields = ('last_name','first_name','number','username','email','new_password',)
         # フィールド名指定
         labels = {'last_name':"名字",'first_name':"名前", 'number':"学生番号",'username':"ユーザー名",'email':"メールアドレス"}
 
