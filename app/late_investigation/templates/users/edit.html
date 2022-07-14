@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ja" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href='{% static "App_Folder_css/style.css" %}' />
+  </head>
+
+  <body>
+    <h1>ユーザ編集</h1>
+
+    {% if AccountChange %}
+    <h1>編集完了!</h1>
+    <a href="{% url 'home' %}">TOPページへ</a>
+
+    {% else %}
+    <div class="register">
+      <table class="reg_form">
+        <form enctype="multipart/form-data" method="post">
+          {% csrf_token %} {{ custom_user_edit_form.as_table }}
+          <tr>
+            <td></td>
+            <td>
+              <input class="btn" type="submit" name="" value="登録" />
+            </td>
+          </tr>
+        </form>
+      </table>
+    </div>
+    {% endif %}
+  </body>
+</html>
