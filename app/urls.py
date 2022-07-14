@@ -17,14 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views as auth_views
 from late_investigation import views
+
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('admin/', admin.site.urls),
-    path('register/', views.AccountRegistration.as_view(), name='register'),
+    path('register/', views.UserRegister.as_view(), name='register'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', login_required(auth_views.LogoutView.as_view()), name='logout'),
     path('auth/', include('social_django.urls', namespace='social')),
+    path('user_edit/', login_required(views.UserEdit.as_view()), name='user_edit'),
 ]

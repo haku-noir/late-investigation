@@ -5,8 +5,9 @@
     <title>Home</title>
   </head>
   <body>
-    {% if user.is_authenticated %}
+    {% if request.user.is_authenticated %}
     <p class="display-4">Hello, {{ user.username }}</p>
+    <a class="lead" href="{% url 'user_edit' %}">Edit</a>
     <a class="lead" href="{% url 'logout' %}">Log out</a>
     {% else %}
     <a class="lead" href="{% url 'login' %}">Log in</a>
