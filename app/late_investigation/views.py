@@ -51,6 +51,7 @@ class UserEdit(TemplateView):
     def __init__(self):
         self.params = {
             "AccountChange": False,
+            "routes": Route.objects.all(),
             "custom_user_edit_form": CustomUserEditForm(user=None),
         }
 
@@ -58,6 +59,7 @@ class UserEdit(TemplateView):
     def get(self,request):
         user = request.user
         self.params["custom_user_edit_form"] = CustomUserEditForm(user=user, instance=user)
+        self.params["routes"] = Route.objects.all()
         self.params["AccountChange"] = False
         return render(request,"users/edit.html", context=self.params)
 
@@ -94,7 +96,7 @@ class Routelist(TemplateView):
     def __init__(self):
         self.params = {
             "route_form": RouteForm(),
-            "routes": Route.objects.all()
+            "routes": Route.objects.all(),
         }
 
     # Get処理
