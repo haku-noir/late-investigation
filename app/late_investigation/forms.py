@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from .models import CustomUser
+from .models import CustomUser, Route
 
 # フォームクラス作成
 class CustomUserForm(forms.ModelForm):
@@ -64,3 +64,12 @@ class CustomUserEditForm(forms.ModelForm):
     #         if self.login_user.email == email:
     #             return email
     #         raise ValidationError("このメールアドレスは既に使用されています。別のメールアドレスを指定してください")
+
+class RouteForm(forms.ModelForm):
+    class Meta():
+        # ユーザー認証
+        model = Route
+        # フィールド指定
+        fields = ('name',)
+        # フィールド名指定
+        labels = {'name':"路線名",}

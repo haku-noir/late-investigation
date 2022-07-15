@@ -30,4 +30,5 @@ urlpatterns = [
     path('logout/', login_required(auth_views.LogoutView.as_view()), name='logout'),
     path('auth/', include('social_django.urls', namespace='social')),
     path('user_edit/', login_required(views.UserEdit.as_view()), name='user_edit'),
+    path('route_list/', login_required(views.Routelist.as_view()), name='route_list'),
 ]
