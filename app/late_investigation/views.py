@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView # テンプレートタグ
-from .forms import CustomUserForm, CustomUserEditForm, RouteForm # ユーザーアカウントフォーム
+from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet # ユーザーアカウントフォーム
 from .models import CustomUser, Route
 from django.contrib.auth import authenticate
 from django.http import HttpResponseRedirect, HttpResponse
@@ -51,15 +51,15 @@ class UserEdit(TemplateView):
     def __init__(self):
         self.params = {
             "AccountChange": False,
-            "routes": Route.objects.all(),
             "custom_user_edit_form": CustomUserEditForm(user=None),
+            "route_formset": RouteInlineFormSet(),
         }
 
     # Get処理
     def get(self,request):
         user = request.user
         self.params["custom_user_edit_form"] = CustomUserEditForm(user=user, instance=user)
-        self.params["routes"] = Route.objects.all()
+        self.params["route_formset"] = RouteInlineFormSet(instance=user)
         self.params["AccountChange"] = False
         return render(request,"users/edit.html", context=self.params)
 
@@ -67,17 +67,22 @@ class UserEdit(TemplateView):
     def post(self,request):
         user = request.user
         self.params["custom_user_edit_form"] = CustomUserEditForm(user=user, instance=user, data=request.POST)
+        self.params["route_formset"] = RouteInlineFormSet(instance=user, data=request.POST)
 
         # フォーム入力の有効検証
         if self.params["custom_user_edit_form"].is_valid():
             # アカウント情報をDB保存
-            custom_user = self.params["custom_user_edit_form"].save()
-            new_password = self.params["custom_user_edit_form"].cleaned_data.get("new_password")
-            if new_password != "":
-                # パスワードをハッシュ化
-                custom_user.set_password(new_password)
-                # ハッシュ化パスワード更新
+            custom_user = self.params["custom_user_edit_form"].save(commit=False)
+            if self.params["route_formset"].is_valid():
                 custom_user.save()
+                self.params["route_formset"].save()
+
+                new_password = self.params["custom_user_edit_form"].cleaned_data.get("new_password")
+                if new_password != "":
+                    # パスワードをハッシュ化
+                    custom_user.set_password(new_password)
+                    # ハッシュ化パスワード更新
+                    custom_user.save()
 
             # アカウント編集情報更新
             self.params["AccountChange"] = True

@@ -4,6 +4,9 @@ from django.db import models
 class Route(models.Model):
     name = models.CharField(max_length=70)
 
+    def __str__(self):
+        return self.name
+
 class CustomUser(AbstractUser):
     number = models.PositiveSmallIntegerField("number", default=0)
     is_teacher = models.BooleanField("is_teacher", default=False)
