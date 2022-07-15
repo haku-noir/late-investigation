@@ -7,6 +7,7 @@
   <body>
     {% if request.user.is_authenticated %}
     <p class="display-4">Hello, {{ user.username }}</p>
+    {{ user.route }}
     <a class="lead" href="{% url 'route_list' %}">Route</a>
     <a class="lead" href="{% url 'user_edit' %}">Edit</a>
     <a class="lead" href="{% url 'logout' %}">Log out</a>

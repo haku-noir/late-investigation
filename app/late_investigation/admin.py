@@ -3,4 +3,3 @@ from . import models
 
 admin.site.register(models.CustomUser)
 admin.site.register(models.Route)
-admin.site.register(models.UserRoute)
