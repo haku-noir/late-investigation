@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView # テンプレートタグ
 from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet # ユーザーアカウントフォーム
-from .models import CustomUser, Route
+from .models import CustomUser, Delay, Route
 from django.contrib.auth import authenticate
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
+import datetime
 
 def home(request):
     return render(request, 'home.html')
@@ -44,7 +45,6 @@ class UserRegister(TemplateView):
             print(self.params["custom_user_form"].errors)
 
         return render(request, "registration/register.html", context=self.params)
-
 
 class UserEdit(TemplateView):
 
@@ -125,3 +125,28 @@ class Routelist(TemplateView):
             print(self.params["route_form"].errors)
 
         return render(request, "routes/list.html", context=self.params)
+
+
+class DelayRegister(TemplateView):
+
+    def __init__(self):
+        self.params = {
+            "routes": Route.objects.all(),
+            "today_delay_routes": [delay.route for delay in Delay.objects.filter(date=datetime.datetime.now())],
+            "DelayCreate": False,
+        }
+
+    # Get処理
+    def get(self,request):
+        # if request.user.is_teacher is False:
+        #     return render(request, "home.html")
+
+        self.params["routes"] = Route.objects.all()
+        self.params["today_delay_routes"] = Delay.objects.filter(date=datetime.datetime.now())
+        self.params["DelayCreate"] = False
+        return render(request,"delay/register.html", context=self.params)
+
+    # Post処理
+    def post(self,request):
+        self.params["DelayCreate"] = True
+        return render(request,"delay/register.html", context=self.params)

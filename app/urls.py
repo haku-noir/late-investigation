@@ -31,4 +31,5 @@ urlpatterns = [
     path('auth/', include('social_django.urls', namespace='social')),
     path('user_edit/', login_required(views.UserEdit.as_view()), name='user_edit'),
     path('route_list/', login_required(views.Routelist.as_view()), name='route_list'),
+    path('delay_register/', login_required(views.DelayRegister.as_view()), name='delay_register'),
 ]
