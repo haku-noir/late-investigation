@@ -6,13 +6,13 @@ from .models import CustomUser, Route
 class RouteRegisterForm(forms.ModelForm):
 
     class Meta:
-        model = CustomUser.route.through
+        model = CustomUser.routes.through
         fields = '__all__'
         labels = {'route':"路線名"}
 
 # インラインフォーム作成
 RouteInlineFormSet = forms.inlineformset_factory(
-    CustomUser, CustomUser.route.through, form=RouteRegisterForm, can_delete=False, extra=3
+    CustomUser, CustomUser.routes.through, form=RouteRegisterForm, can_delete=False, extra=3
 )
 
 # フォームクラス作成
