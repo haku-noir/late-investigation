@@ -27,9 +27,9 @@
             <tr>
               <td>{{ route.name }}</td>
               {% if route in today_delay_routes %}
-              <td><input type="checkbox" checked></td>
+              <td><input type="checkbox" name="checked_delay" value="{{route.id}}" checked></td>
               {% else %}
-              <td><input type="checkbox"></td>
+              <td><input type="checkbox" name="delay" value="{{route.id}}"></td>
               {% endif %}
             </tr>
             {% endfor %}

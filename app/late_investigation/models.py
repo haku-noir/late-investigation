@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+import datetime
+
+dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
 
 class Route(models.Model):
     name = models.CharField(max_length=70)
@@ -8,7 +11,9 @@ class Route(models.Model):
         return self.name
 
 class Delay(models.Model):
-    date = models.DateTimeField(max_length=70)
+    year = models.PositiveSmallIntegerField(default=dt_now_jst.year)
+    month = models.PositiveSmallIntegerField(default=dt_now_jst.month)
+    day = models.PositiveSmallIntegerField(default=dt_now_jst.day)
     route = models.OneToOneField(Route, on_delete=models.CASCADE)
 
 class CustomUser(AbstractUser):

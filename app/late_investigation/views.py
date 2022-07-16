@@ -7,6 +7,9 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 import datetime
 
+dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+now = {"year": dt_now_jst.year,"month": dt_now_jst.month,"day": dt_now_jst.day,}
+
 def home(request):
     return render(request, 'home.html')
 
@@ -132,7 +135,7 @@ class DelayRegister(TemplateView):
     def __init__(self):
         self.params = {
             "routes": Route.objects.all(),
-            "today_delay_routes": [delay.route for delay in Delay.objects.filter(date=datetime.datetime.now())],
+            "today_delay_routes": [delay.route for delay in Delay.objects.filter(**now)],
             "DelayCreate": False,
         }
 
@@ -142,11 +145,25 @@ class DelayRegister(TemplateView):
         #     return render(request, "home.html")
 
         self.params["routes"] = Route.objects.all()
-        self.params["today_delay_routes"] = Delay.objects.filter(date=datetime.datetime.now())
+        self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
         self.params["DelayCreate"] = False
         return render(request,"delay/register.html", context=self.params)
 
     # Post処理
     def post(self,request):
+        self.params["routes"] = Route.objects.all()
+        self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
+
+        checked_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("checked_delay")]
+        delay_route_ids = [route.id for route in self.params["today_delay_routes"]]
+        unchecked_delay_route_ids = list(set(delay_route_ids) - set(checked_delay_route_ids))
+
+        for route_id in unchecked_delay_route_ids:
+            Delay.objects.get(route_id=route_id,**now).delete()
+
+        for route_id in request.POST.getlist("delay"):
+            Delay(route_id=int(route_id)).save()
+
         self.params["DelayCreate"] = True
+
         return render(request,"delay/register.html", context=self.params)
