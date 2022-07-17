@@ -247,3 +247,16 @@ class UserDelayList(TemplateView):
         self.params["FinishUpdate"] = True
 
         return render(request,"userdelay/list.html", context=self.params)
+
+
+class UserDelayHistory(TemplateView):
+
+    def __init__(self):
+        self.params = {
+            "userdelays": UserDelay.objects.all(),
+        }
+
+    # Get処理
+    def get(self,request):
+        self.params["userdelays"] = UserDelay.objects.filter(user=request.user)
+        return render(request,"userdelay/history.html", context=self.params)
