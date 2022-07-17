@@ -199,7 +199,8 @@ class UserDelayRegister(TemplateView):
         add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
         for delay_id in add_delay_ids:
             delay = Delay.objects.filter(id=delay_id)[0]
-            UserDelay(user=user,delay=delay).save()
+            if delay.route in user.routes.all():
+                UserDelay(user=user,delay=delay).save()
 
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
