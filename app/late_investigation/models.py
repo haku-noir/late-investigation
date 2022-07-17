@@ -21,4 +21,9 @@ class Delay(models.Model):
     month = models.PositiveSmallIntegerField(default=dt_now_jst.month)
     day = models.PositiveSmallIntegerField(default=dt_now_jst.day)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
-    users = models.ManyToManyField(CustomUser)
+    users = models.ManyToManyField(CustomUser, through="UserDelay")
+
+class UserDelay(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    delay = models.ForeignKey(Delay, on_delete=models.CASCADE)
+    is_finished = models.BooleanField(default=False)

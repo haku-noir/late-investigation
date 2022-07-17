@@ -28,10 +28,10 @@
             <tr>
               <td>{{delay.year}}/{{delay.month}}/{{delay.day}}</td>
               <td>{{ delay.route.name }}</td>
-              {% if user in delay.users  %}
-              <td><input type="checkbox" name="checked_user_delay" value="{{delay.id}}" checked></td>
+              {% if delay.id in delay_ids  %}
+              <td><input type="checkbox" name="checked_delay" value="{{delay.id}}" checked></td>
               {% else %}
-              <td><input type="checkbox" name="user_delay" value="{{delay.id}}"></td>
+              <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
               {% endif %}
             </tr>
             {% endfor %}
