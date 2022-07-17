@@ -183,15 +183,11 @@ class UserDelayRegister(TemplateView):
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [user_delay.delay.id for user_delay in UserDelay.objects.filter(user=request.user)]
         self.params["DelayCreate"] = False
-        return render(request,"users/delay_register.html", context=self.params)
+        return render(request,"userdelay/register.html", context=self.params)
 
     # Post処理
     def post(self,request):
         user = request.user
-        self.params["user_routes"] = user.routes
-        self.params["delays"] = Delay.objects.all()
-        self.params["delay_ids"] = [user_delay.delay.id for user_delay in UserDelay.objects.filter(user=user)]
-
         checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
         unchecked_delay_ids = list(set(self.params["delay_ids"]) - set(checked_delay_ids))
 
@@ -204,6 +200,21 @@ class UserDelayRegister(TemplateView):
             delay = Delay.objects.filter(id=delay_id)[0]
             UserDelay(user=user,delay=delay).save()
 
+        self.params["user_routes"] = user.routes
+        self.params["delays"] = Delay.objects.all()
+        self.params["delay_ids"] = [user_delay.delay.id for user_delay in UserDelay.objects.filter(user=user)]
         self.params["DelayCreate"] = True
 
-        return render(request,"users/delay_register.html", context=self.params)
+        return render(request,"userdelay/register.html", context=self.params)
+
+class UserDelayList(TemplateView):
+
+    def __init__(self):
+        self.params = {
+            "userdelays": UserDelay.objects.all(),
+        }
+
+    # Get処理
+    def get(self,request):
+        self.params["userdelays"] = UserDelay.objects.all()
+        return render(request,"userdelay/list.html", context=self.params)

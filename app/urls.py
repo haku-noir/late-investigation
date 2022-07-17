@@ -32,5 +32,6 @@ urlpatterns = [
     path('user_edit/', login_required(views.UserEdit.as_view()), name='user_edit'),
     path('route_list/', login_required(views.Routelist.as_view()), name='route_list'),
     path('delay_register/', login_required(views.DelayRegister.as_view()), name='delay_register'),
-    path('user_delay_register/', login_required(views.UserDelayRegister.as_view()), name='user_delay_register'),
+    path('userdelay_register/', login_required(views.UserDelayRegister.as_view()), name='userdelay_register'),
+    path('userdelay_list/', login_required(views.UserDelayList.as_view()), name='userdelay_list'),
 ]
