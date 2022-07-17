@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView # テンプレートタグ
 from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet # ユーザーアカウントフォーム
-from .models import CustomUser, Delay, Route
+from .models import CustomUser, Delay, Route, UserDelay
 from django.contrib.auth import authenticate
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
@@ -129,7 +129,6 @@ class Routelist(TemplateView):
 
         return render(request, "routes/list.html", context=self.params)
 
-
 class DelayRegister(TemplateView):
 
     def __init__(self):
@@ -157,13 +156,54 @@ class DelayRegister(TemplateView):
         checked_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("checked_delay")]
         delay_route_ids = [route.id for route in self.params["today_delay_routes"]]
         unchecked_delay_route_ids = list(set(delay_route_ids) - set(checked_delay_route_ids))
-
         for route_id in unchecked_delay_route_ids:
-            Delay.objects.get(route_id=route_id,**now).delete()
+            Delay.objects.filter(route_id=route_id,**now)[0].delete()
 
-        for route_id in request.POST.getlist("delay"):
-            Delay(route_id=int(route_id)).save()
+        add_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("delay")]
+        for route_id in add_delay_route_ids:
+            Delay(route_id=route_id).save()
 
         self.params["DelayCreate"] = True
 
         return render(request,"delay/register.html", context=self.params)
+
+class UserDelayRegister(TemplateView):
+
+    def __init__(self):
+        self.params = {
+            "user_routes": Route.objects.all(),
+            "delays": Delay.objects.all(),
+            "delay_ids": [],
+            "DelayCreate": False,
+        }
+
+    # Get処理
+    def get(self,request):
+        self.params["user_routes"] = request.user.routes
+        self.params["delays"] = Delay.objects.all()
+        self.params["delay_ids"] = [user_delay.delay.id for user_delay in UserDelay.objects.filter(user=request.user)]
+        self.params["DelayCreate"] = False
+        return render(request,"users/delay_register.html", context=self.params)
+
+    # Post処理
+    def post(self,request):
+        user = request.user
+        self.params["user_routes"] = user.routes
+        self.params["delays"] = Delay.objects.all()
+        self.params["delay_ids"] = [user_delay.delay.id for user_delay in UserDelay.objects.filter(user=user)]
+
+        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
+        unchecked_delay_ids = list(set(self.params["delay_ids"]) - set(checked_delay_ids))
+
+        for delay_id in unchecked_delay_ids:
+            delay = Delay.objects.get(id=delay_id)
+            UserDelay.objects.filter(user=user,delay=delay)[0].delete()
+
+        add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
+        for delay_id in add_delay_ids:
+            delay = Delay.objects.filter(id=delay_id)[0]
+            UserDelay(user=user,delay=delay).save()
+
+        self.params["DelayCreate"] = True
+
+        return render(request,"users/delay_register.html", context=self.params)
