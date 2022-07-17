@@ -15,6 +15,7 @@
     <a href="{% url 'home' %}">TOPページへ</a>
 
     {% else %}
+    {{user_route_ids}}
     <div class="register">
       <table class="reg_form">
         <tr>
@@ -28,10 +29,12 @@
             <tr>
               <td>{{delay.year}}/{{delay.month}}/{{delay.day}}</td>
               <td>{{ delay.route.name }}</td>
-              {% if delay.id in delay_ids  %}
-              <td><input type="checkbox" name="checked_delay" value="{{delay.id}}" checked></td>
-              {% else %}
-              <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
+              {% if delay.route.id in user_route_ids %}
+                {% if delay.id in delay_ids  %}
+                <td><input type="checkbox" name="checked_delay" value="{{delay.id}}" checked></td>
+                {% else %}
+                <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
+                {% endif %}
               {% endif %}
             </tr>
             {% endfor %}

@@ -171,7 +171,7 @@ class UserDelayRegister(TemplateView):
 
     def __init__(self):
         self.params = {
-            "user_routes": Route.objects.all(),
+            "user_route_ids": [route.id for route in Route.objects.all()],
             "delays": Delay.objects.all(),
             "delay_ids": [],
             "DelayCreate": False,
@@ -179,7 +179,7 @@ class UserDelayRegister(TemplateView):
 
     # Get処理
     def get(self,request):
-        self.params["user_routes"] = request.user.routes
+        self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
         self.params["DelayCreate"] = False
@@ -199,9 +199,10 @@ class UserDelayRegister(TemplateView):
         add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
         for delay_id in add_delay_ids:
             delay = Delay.objects.filter(id=delay_id)[0]
-            UserDelay(user=user,delay=delay).save()
+            if delay.route in user.routes.all():
+                UserDelay(user=user,delay=delay).save()
 
-        self.params["user_routes"] = user.routes
+        self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
         self.params["DelayCreate"] = True
