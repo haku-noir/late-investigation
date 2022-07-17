@@ -129,7 +129,6 @@ class Routelist(TemplateView):
 
         return render(request, "routes/list.html", context=self.params)
 
-
 class DelayRegister(TemplateView):
 
     def __init__(self):
@@ -167,3 +166,28 @@ class DelayRegister(TemplateView):
         self.params["DelayCreate"] = True
 
         return render(request,"delay/register.html", context=self.params)
+
+class UserDelayRegister(TemplateView):
+
+    def __init__(self):
+        self.params = {
+            "user_routes": Route.objects.all(),
+            "delays": Delay.objects.all(),
+            "DelayCreate": False,
+        }
+
+    # Get処理
+    def get(self,request):
+        self.params["user_routes"] = request.user.routes
+        self.params["delays"] = Delay.objects.all()
+        self.params["DelayCreate"] = False
+        return render(request,"users/delay_register.html", context=self.params)
+
+    # Post処理
+    def post(self,request):
+        self.params["routes"] = Route.objects.all()
+        self.params["delays"] = Delay.objects.all()
+
+        self.params["DelayCreate"] = True
+
+        return render(request,"users/delay_register.html", context=self.params)

@@ -8,7 +8,7 @@
   </head>
 
   <body>
-    <h1>遅延路線登録</h1>
+    <h1>遅延調査</h1>
 
     {% if DelayCreate %}
     <h1>登録完了!</h1>
@@ -18,22 +18,25 @@
     <div class="register">
       <table class="reg_form">
         <tr>
+          <th>日付</th>
           <th>路線名</th>
-          <th>遅延</th>
+          <th>遅刻取り消し</th>
         </tr>
         <form enctype="multipart/form-data" method="post">
           {% csrf_token %}
-            {% for route in routes %}
+            {% for delay in delays %}
             <tr>
-              <td>{{ route.name }}</td>
-              {% if route in today_delay_routes %}
-              <td><input type="checkbox" name="checked_delay" value="{{route.id}}" checked></td>
+              <td>{{delay.year}}/{{delay.month}}/{{delay.day}}</td>
+              <td>{{ delay.route.name }}</td>
+              {% if user in delay.users  %}
+              <td><input type="checkbox" name="checked_user_delay" value="{{delay.id}}" checked></td>
               {% else %}
-              <td><input type="checkbox" name="delay" value="{{route.id}}"></td>
+              <td><input type="checkbox" name="user_delay" value="{{delay.id}}"></td>
               {% endif %}
             </tr>
             {% endfor %}
           <tr>
+            <td></td>
             <td></td>
             <td>
               <input class="btn" type="submit" name="" value="登録" />
