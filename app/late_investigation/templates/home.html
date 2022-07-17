@@ -10,7 +10,8 @@
     {{ user.route }}
     <a class="lead" href="{% url 'route_list' %}">Route</a>
     <a class="lead" href="{% url 'delay_register' %}">Delay</a>
-    <a class="lead" href="{% url 'user_delay_register' %}">UserDelay</a>
+    <a class="lead" href="{% url 'userdelay_register' %}">UserDelay</a>
+    <a class="lead" href="{% url 'userdelay_list' %}">UserDelayList</a>
     <a class="lead" href="{% url 'user_edit' %}">Edit</a>
     <a class="lead" href="{% url 'logout' %}">Log out</a>
     {% else %}
