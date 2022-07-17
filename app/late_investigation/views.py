@@ -181,7 +181,7 @@ class UserDelayRegister(TemplateView):
     def get(self,request):
         self.params["user_routes"] = request.user.routes
         self.params["delays"] = Delay.objects.all()
-        self.params["delay_ids"] = [user_delay.delay.id for user_delay in UserDelay.objects.filter(user=request.user)]
+        self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
         self.params["DelayCreate"] = False
         return render(request,"userdelay/register.html", context=self.params)
 
@@ -189,7 +189,8 @@ class UserDelayRegister(TemplateView):
     def post(self,request):
         user = request.user
         checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
-        unchecked_delay_ids = list(set(self.params["delay_ids"]) - set(checked_delay_ids))
+        delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
+        unchecked_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
 
         for delay_id in unchecked_delay_ids:
             delay = Delay.objects.get(id=delay_id)
@@ -202,7 +203,7 @@ class UserDelayRegister(TemplateView):
 
         self.params["user_routes"] = user.routes
         self.params["delays"] = Delay.objects.all()
-        self.params["delay_ids"] = [user_delay.delay.id for user_delay in UserDelay.objects.filter(user=user)]
+        self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
         self.params["DelayCreate"] = True
 
         return render(request,"userdelay/register.html", context=self.params)
@@ -212,9 +213,37 @@ class UserDelayList(TemplateView):
     def __init__(self):
         self.params = {
             "userdelays": UserDelay.objects.all(),
+            "finished_userdelay_ids": [],
+            "FinishUpdate": False
         }
 
     # Get処理
     def get(self,request):
         self.params["userdelays"] = UserDelay.objects.all()
+        self.params["finished_userdelay_ids"] = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
+        self.params["FinishUpdate"] = False
+        return render(request,"userdelay/list.html", context=self.params)
+
+    # Post処理
+    def post(self,request):
+        user = request.user
+        checked_userdelay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_finish")]
+        finished_userdelay_ids = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
+        unchecked_userdelay_ids = list(set(finished_userdelay_ids) - set(checked_userdelay_ids))
+
+        for userdelay_id in unchecked_userdelay_ids:
+            userdelay = UserDelay.objects.get(id=userdelay_id)
+            userdelay.is_finished = False
+            userdelay.save()
+
+        add_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("finish")]
+        for userdelay_id in add_userdelay_ids:
+            userdelay = UserDelay.objects.get(id=userdelay_id)
+            userdelay.is_finished = True
+            userdelay.save()
+
+        self.params["user_routes"] = user.routes
+        self.params["finished_userdelay_ids"] = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
+        self.params["FinishUpdate"] = True
+
         return render(request,"userdelay/list.html", context=self.params)

@@ -10,7 +10,7 @@
   <body>
     <h1>遅刻学生一覧</h1>
 
-    {% if DelayCreate %}
+    {% if FinishUpdate %}
     <h1>登録完了!</h1>
     <a href="{% url 'home' %}">TOPページへ</a>
 
@@ -33,7 +33,7 @@
               <td>{{userdelay.user.last_name}} {{userdelay.user.first_name}}</td>
               <td>{{ userdelay.delay.route.name }}</td>
               {% if userdelay.is_finished %}
-              <td><input type="checkbox" name="finish" value="{{userdelay.id}}" checked></td>
+              <td><input type="checkbox" name="checked_finish" value="{{userdelay.id}}" checked></td>
               {% else %}
               <td><input type="checkbox" name="finish" value="{{userdelay.id}}"></td>
               {% endif %}
