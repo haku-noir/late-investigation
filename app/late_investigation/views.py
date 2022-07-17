@@ -148,7 +148,6 @@ class DelayRegister(TemplateView):
         # if request.user.is_teacher is False:
         #     return render(request, "home.html")
 
-        self.updateinfo()
         self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
         self.params["DelayCreate"] = False
         return render(request,"delay/register.html", context=self.params)
@@ -169,6 +168,14 @@ class DelayRegister(TemplateView):
 
         self.params["DelayCreate"] = True
 
+        return render(request,"delay/register.html", context=self.params)
+
+    # Update処理
+    def update(self,request):
+        # if request.user.is_teacher is False:
+        #     return render(request, "home.html")
+
+        self.updateinfo()
         return render(request,"delay/register.html", context=self.params)
 
 class UserDelayRegister(TemplateView):
