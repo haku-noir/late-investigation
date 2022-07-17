@@ -24,7 +24,6 @@
         </tr>
         <form enctype="multipart/form-data" method="post">
           {% csrf_token %}
-            {% comment %} {% for route, delay_time in zip(routes, delay_times) %} {% endcomment %}
             {% for info in infos %}
             <tr>
               <td>{{ info.route.name }}</td>

@@ -6,17 +6,18 @@
   </head>
   <body>
     {% if request.user.is_authenticated %}
-    <p class="display-4">Hello, {{ user.username }}</p>
-    {{ user.route }}
-    <a class="lead" href="{% url 'route_list' %}">Route</a>
-    <a class="lead" href="{% url 'delay_register' %}">Delay</a>
-    <a class="lead" href="{% url 'userdelay_register' %}">UserDelay</a>
-    <a class="lead" href="{% url 'userdelay_list' %}">UserDelayList</a>
-    <a class="lead" href="{% url 'userdelay_history' %}">UserDelayHistory</a>
-    <a class="lead" href="{% url 'user_edit' %}">Edit</a>
-    <a class="lead" href="{% url 'logout' %}">Log out</a>
+      <p class="display-4">Hello, {{ user.username }}</p>
+      <p><a class="lead" href="{% url 'user_edit' %}">ユーザ情報編集</a></p>
+      <p><a class="lead" href="{% url 'logout' %}">ログアウト</a></p>
+      <h2>先生用ページ</h2>
+      <p><a class="lead" href="{% url 'route' %}">路線一覧</a></p>
+      <p><a class="lead" href="{% url 'delay_register' %}">遅延路線登録</a></p>
+      <p><a class="lead" href="{% url 'userdelay' %}">遅刻学生一覧</a></p>
+      <h2>学生用ページ</h2>
+      <p><a class="lead" href="{% url 'userdelay_register' %}">遅刻取り消し申請</a></p>
+      <p><a class="lead" href="{% url 'userdelay_history' %}">遅刻取り消し申請の履歴</a></p>
     {% else %}
-    <a class="lead" href="{% url 'login' %}">Log in</a>
+    <a class="lead" href="{% url 'login' %}">ログイン</a>
     {% endif %}
   </body>
 </html>
