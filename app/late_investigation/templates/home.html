@@ -16,6 +16,43 @@
       <h2>学生用ページ</h2>
       <p><a class="lead" href="{% url 'userdelay_register' %}">遅刻取り消し申請</a></p>
       <p><a class="lead" href="{% url 'userdelay_history' %}">遅刻取り消し申請の履歴</a></p>
+
+      {% if DelayCreate %}
+      <h1>登録完了!</h1>
+      <a href="{% url 'home' %}">戻る</a>
+
+      {% else %}
+      <h3>{{today}}</h3>
+      <div class="register">
+        <table class="reg_form">
+          <tr>
+            <th>路線名</th>
+            <th>遅刻取り消し</th>
+          </tr>
+          <form enctype="multipart/form-data" method="post">
+            {% csrf_token %}
+            {% for delay in delays %}
+            <tr>
+              <td>{{ delay.route.name }}</td>
+              {% if delay.route.id in user_route_ids %}
+                {% if delay.id in delay_ids  %}
+                <td><input type="checkbox" name="checked_delay" value="{{delay.id}}" checked></td>
+                {% else %}
+                <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
+                {% endif %}
+              {% endif %}
+            </tr>
+            {% endfor %}
+            <tr>
+              <td></td>
+              <td>
+                <input class="btn" type="submit" name="" value="登録" />
+              </td>
+            </tr>
+          </form>
+        </table>
+      </div>
+      {% endif %}
     {% else %}
     <a class="lead" href="{% url 'login' %}">ログイン</a>
     {% endif %}

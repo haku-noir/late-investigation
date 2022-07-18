@@ -3,8 +3,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome import service as fs
 from selenium.webdriver.common.by import By
 
-from .models import Route
-
 CHROMEDRIVER = '/opt/chrome/chromedriver'
 URL = 'https://traininfo.jreast.co.jp/delay_certificate/'
 
@@ -35,3 +33,6 @@ def getinfo():
         info[name] = time
 
     return info
+
+if __name__ == '__main__':
+    print(getinfo())

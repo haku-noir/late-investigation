@@ -11,8 +11,47 @@ dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)
 now = {"year": dt_now_jst.year,"month": dt_now_jst.month,"day": dt_now_jst.day,}
 info = getinfo()
 
-def home(request):
-    return render(request, 'home.html')
+class Home(TemplateView):
+
+    def __init__(self):
+        self.params = {
+            "user_route_ids": [route.id for route in Route.objects.all()],
+            "delays": Delay.objects.all(),
+            "delay_ids": [],
+            "UserDelayCreate": False,
+        }
+
+    # Get処理
+    def get(self,request):
+        self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
+        self.params["delays"] = Delay.objects.all()
+        self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
+        self.params["UserDelayCreate"] = False
+        return render(request,"home.html", context=self.params)
+
+    # Post処理
+    def post(self,request):
+        user = request.user
+        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
+        delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
+        unchecked_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
+
+        for delay_id in unchecked_delay_ids:
+            delay = Delay.objects.get(id=delay_id)
+            UserDelay.objects.filter(user=user,delay=delay)[0].delete()
+
+        add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
+        for delay_id in add_delay_ids:
+            delay = Delay.objects.filter(id=delay_id)[0]
+            if delay.route in user.routes.all():
+                UserDelay(user=user,delay=delay).save()
+
+        self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
+        self.params["delays"] = Delay.objects.all()
+        self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
+        self.params["UserDelayCreate"] = True
+
+        return render(request,"home.html", context=self.params)
 
 class UserRegister(TemplateView):
 
