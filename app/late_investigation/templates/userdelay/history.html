@@ -1,36 +1,34 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="ja" dir="ltr">
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-    <link rel="stylesheet" href='{% static "App_Folder_css/style.css" %}' />
-  </head>
+{% extends 'layout.html' %}
 
-  <body>
-    <h1>遅刻取り消し申請履歴</h1>
+{% block title %}
+申請履歴
+{% endblock %}
 
-    <div class="register">
-      <table class="reg_form">
-        <tr>
-          <th>日付</th>
-          <th>路線名</th>
-          <th>遅刻取り消し完了</th>
-        </tr>
-            {% for userdelay in userdelays %}
-            <tr>
-              <td>{{userdelay.delay.year}}/{{userdelay.delay.month}}/{{userdelay.delay.day}}</td>
-              <td>{{ userdelay.delay.route.name }}</td>
-              {% if userdelay.is_finished %}
-              <td>完了</td>
-              {% else %}
-              <td>作業中</td>
-              {% endif %}
-            </tr>
-            {% endfor %}
-        </form>
-      </table>
-    </div>
-    <a href="{% url 'home' %}">TOPページへ</a>
-  </body>
-</html>
+{% block banner %}
+<h1>遅刻取り消し申請履歴</h1>
+{% endblock %}
+
+{% block content %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">日付</th>
+      <th scope="col">路線名</th>
+      <th scope="col">申請状況</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for userdelay in userdelays %}
+    <tr>
+      <td scope="row">{{userdelay.delay.year}}/{{userdelay.delay.month}}/{{userdelay.delay.day}}</td>
+      <td scope="row">{{ userdelay.delay.route.name }}</td>
+      {% if userdelay.is_finished %}
+      <td>取り消し完了</td>
+      {% else %}
+      <td>作業中</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
