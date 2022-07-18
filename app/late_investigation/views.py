@@ -5,11 +5,11 @@ from django.views.generic import TemplateView
 from django.contrib.auth import authenticate
 from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet # ユーザーアカウントフォーム
 from .models import CustomUser, Delay, Route, UserDelay
-from .routeinfo import getinfos
+from .routeinfo import getinfo
 
 dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
 now = {"year": dt_now_jst.year,"month": dt_now_jst.month,"day": dt_now_jst.day,}
-infos = getinfos()
+info = getinfo()
 
 def home(request):
     return render(request, 'home.html')
@@ -134,13 +134,18 @@ class DelayRegister(TemplateView):
 
     def __init__(self):
         self.params = {
-            "infos" : infos,
+            "infos" : [],
             "today_delay_routes": [delay.route for delay in Delay.objects.filter(**now)],
             "DelayCreate": False,
         }
 
-    def updateinfo(self):
-        infos = getinfos()
+    def updateinfos(self):
+        info = getinfo()
+        routes = Route.objects.all()
+        times = [info.get(route.name) if route.name in info else "不明" for route in routes]
+        infos = []
+        for i in range(len(routes)):
+            infos.append({'route':routes[i], 'time':times[i]})
         self.params["infos"] = infos
 
     # Get処理
@@ -148,6 +153,12 @@ class DelayRegister(TemplateView):
         # if request.user.is_teacher is False:
         #     return render(request, "home.html")
 
+        routes = Route.objects.all()
+        times = [info.get(route.name) if route.name in info else "不明" for route in routes]
+        infos = []
+        for i in range(len(routes)):
+            infos.append({'route':routes[i], 'time':times[i]})
+        self.params["infos"] = infos
         self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
         self.params["DelayCreate"] = False
         return render(request,"delay/register.html", context=self.params)
@@ -185,7 +196,7 @@ class UserDelayRegister(TemplateView):
             "user_route_ids": [route.id for route in Route.objects.all()],
             "delays": Delay.objects.all(),
             "delay_ids": [],
-            "DelayCreate": False,
+            "UserDelayCreate": False,
         }
 
     # Get処理
@@ -193,7 +204,7 @@ class UserDelayRegister(TemplateView):
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
-        self.params["DelayCreate"] = False
+        self.params["UserDelayCreate"] = False
         return render(request,"userdelay/register.html", context=self.params)
 
     # Post処理
@@ -216,7 +227,7 @@ class UserDelayRegister(TemplateView):
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
-        self.params["DelayCreate"] = True
+        self.params["UserDelayCreate"] = True
 
         return render(request,"userdelay/register.html", context=self.params)
 
@@ -259,7 +270,6 @@ class UserDelayList(TemplateView):
         self.params["FinishUpdate"] = True
 
         return render(request,"userdelay/list.html", context=self.params)
-
 
 class UserDelayHistory(TemplateView):
 
