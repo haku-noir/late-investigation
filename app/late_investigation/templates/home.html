@@ -1,68 +1,51 @@
 {% extends 'layout.html' %}
+
 {% block title %}
 とある高専の遅刻調査
 {% endblock %}
+
+{% block banner %}
+<h1>今日の遅延</h1>
+{% endblock %}
+
 {% block content %}
 {% if UserDelayCreate %}
-<div class="container">
-  <div class="page-header" id="banner">
-    <div class="row my-4">
-      <div class="col-12">
-        <h2>登録完了!</h2>
-      </div>
-      <div class="col-12">
-        <a class="btn btn-primary" href="{% url 'home' %}">戻る</a>
-      </div>
-    </div>
+<div class="row my-4">
+  <div class="col-12">
+    <h2>登録完了!</h2>
+  </div>
+  <div class="col-12">
+    <a class="btn btn-primary" href="{% url 'home' %}">戻る</a>
   </div>
 </div>
 {% else %}
-<div class="container">
-  <div class="page-header" id="banner">
-    <div class="row my-4">
-      <div class="col-12">
-        <h1>今日の遅延</h1>
-      </div>
-    </div>
-  </div>
-
-  <section class="bs-docs-section">
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="bs-component">
-          <form enctype="multipart/form-data" method="post">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th scope="col">路線名</th>
-                  <th scope="col">遅刻取り消し</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% csrf_token %}
-                {% for delay in delays %}
-                <tr>
-                  <td scope="row">{{ delay.route.name }}</td>
-                  {% if delay.route.id in user_route_ids %}
-                    {% if delay.id in delay_ids  %}
-                    <td><input type="checkbox" name="checked_delay" value="{{delay.id}}" checked></td>
-                    {% else %}
-                    <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
-                    {% endif %}
-                  {% endif %}
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            <p class="bs-component">
-              <input type="submit" class="btn btn-info" value="登録" />
-            </p>
-          </form>
-      </div>
-      </div>
-    </div>
-  </section>
-</div>
-<h3>{{today}}</h3>
+<form enctype="multipart/form-data" method="post">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">路線名</th>
+        <th scope="col">遅刻取り消し申請</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% csrf_token %}
+      {% for delay in delays %}
+      <tr>
+        <td scope="row">{{ delay.route.name }}</td>
+        {% if delay.route.id in user_route_ids %}
+          {% if delay.id in delay_ids  %}
+          <td><input type="checkbox" name="checked_delay" value="{{delay.id}}" checked></td>
+          {% else %}
+          <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
+          {% endif %}
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="bs-component">
+    <input type="submit" class="btn btn-info" value="登録" />
+  </p>
+</form>
 {% endif %}
 {% endblock %}

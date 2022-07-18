@@ -34,11 +34,11 @@ class Home(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
-        if len(checked_delay_ids) == 0:
+        delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
+        if len(delay_ids) == 0:
             return render(request,"home.html", context=self.params)
 
-        delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
+        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
         unchecked_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
 
         for delay_id in unchecked_delay_ids:
