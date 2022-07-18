@@ -1,6 +1,6 @@
 
 import datetime
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.contrib.auth import authenticate
 from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet # ユーザーアカウントフォーム
@@ -23,6 +23,8 @@ class Home(TemplateView):
 
     # Get処理
     def get(self,request):
+        if request.user.id is None:
+            return redirect('/login')
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
