@@ -39,7 +39,7 @@
         <td scope="row">{{userdelay.user.last_name}} {{userdelay.user.first_name}}</td>
         <td scope="row">{{ userdelay.delay.route.name }}</td>
         {% if userdelay.is_finished %}
-        <td><input type="checkbox" name="checked_finish" value="{{userdelay.id}}" checked></td>
+        <td><input type="checkbox" name="finish" value="{{userdelay.id}}" checked></td>
         {% else %}
         <td><input type="checkbox" name="finish" value="{{userdelay.id}}"></td>
         {% endif %}

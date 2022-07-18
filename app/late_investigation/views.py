@@ -34,12 +34,12 @@ class Home(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
-        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
         delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
-        unchecked_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
+        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
+        add_delay_ids = list(set(checked_delay_ids) - set(delay_ids))
+        delete_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
 
-        if len(add_delay_ids) == 0:
+        if len(add_delay_ids) == 0 and len(delete_delay_ids) == 0:
             return redirect("/")
 
         for delay_id in add_delay_ids:
@@ -47,7 +47,7 @@ class Home(TemplateView):
             if delay.route in user.routes.all():
                 UserDelay(user=user,delay=delay).save()
 
-        for delay_id in unchecked_delay_ids:
+        for delay_id in delete_delay_ids:
             delay = Delay.objects.get(id=delay_id)
             UserDelay.objects.filter(user=user,delay=delay)[0].delete()
 
@@ -209,18 +209,18 @@ class DelayRegister(TemplateView):
 
     # Post処理
     def post(self,request):
-        add_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("delay")]
-        checked_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("checked_delay")]
         delay_route_ids = [route.id for route in self.params["today_delay_routes"]]
-        unchecked_delay_route_ids = list(set(delay_route_ids) - set(checked_delay_route_ids))
+        checked_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("delay")]
+        add_delay_route_ids = list(set(checked_delay_route_ids) - set(delay_route_ids))
+        delete_delay_route_ids = list(set(delay_route_ids) - set(checked_delay_route_ids))
 
-        if len(add_delay_route_ids) == 0:
+        if len(add_delay_route_ids) == 0 and len(delete_delay_route_ids) == 0:
             return redirect("/delay/register")
 
         for route_id in add_delay_route_ids:
             Delay(route_id=route_id).save()
 
-        for route_id in unchecked_delay_route_ids:
+        for route_id in delete_delay_route_ids:
             Delay.objects.filter(route_id=route_id,**now)[0].delete()
 
         self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
@@ -257,12 +257,12 @@ class UserDelayRegister(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
-        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
         delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
-        unchecked_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
+        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
+        add_delay_ids = list(set(checked_delay_ids) - set(delay_ids))
+        delete_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
 
-        if len(add_delay_ids) == 0:
+        if len(add_delay_ids) == 0 and len(delete_delay_ids) == 0:
             return redirect("/user/delay/register")
 
         for delay_id in add_delay_ids:
@@ -270,7 +270,7 @@ class UserDelayRegister(TemplateView):
             if delay.route in user.routes.all():
                 UserDelay(user=user,delay=delay).save()
 
-        for delay_id in unchecked_delay_ids:
+        for delay_id in delete_delay_ids:
             delay = Delay.objects.get(id=delay_id)
             UserDelay.objects.filter(user=user,delay=delay)[0].delete()
 
@@ -300,23 +300,23 @@ class UserDelayList(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        add_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("finish")]
-        checked_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("checked_finish")]
+        checked_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("finish")]
         finished_userdelay_ids = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
-        unchecked_userdelay_ids = list(set(finished_userdelay_ids) - set(checked_userdelay_ids))
+        add_finished_userdelay_ids = list(set(checked_userdelay_ids) - set(finished_userdelay_ids))
+        delete_finished_userdelay_ids = list(set(finished_userdelay_ids) - set(checked_userdelay_ids))
 
-        if len(add_userdelay_ids) == 0:
+        if len(add_finished_userdelay_ids) == 0 and len(delete_finished_userdelay_ids) == 0:
             return redirect("/user/delay/")
 
-        for userdelay_id in add_userdelay_ids:
+        for userdelay_id in add_finished_userdelay_ids:
             userdelay = UserDelay.objects.get(id=userdelay_id)
             userdelay.is_finished = True
             userdelay.save()
 
-        for userdelay_id in unchecked_userdelay_ids:
+        for userdelay_id in delete_finished_userdelay_ids:
             userdelay = UserDelay.objects.get(id=userdelay_id)
             userdelay.is_finished = False
-            # userdelay.save()
+            userdelay.save()
 
         self.params["user_routes"] = user.routes
         self.params["finished_userdelay_ids"] = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
