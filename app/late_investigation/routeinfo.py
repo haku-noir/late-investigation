@@ -3,12 +3,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome import service as fs
 from selenium.webdriver.common.by import By
 
-from .models import Route
-
 CHROMEDRIVER = '/opt/chrome/chromedriver'
 URL = 'https://traininfo.jreast.co.jp/delay_certificate/'
 
-def getinfos():
+def getinfo():
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
@@ -34,10 +32,7 @@ def getinfos():
     for name, time in zip(names, times):
         info[name] = time
 
-    routes = Route.objects.all()
-    times = [info.get(route.name) if route.name in info else "不明" for route in routes]
-    route_infos = []
-    for i in range(len(routes)):
-        route_infos.append({'route':routes[i], 'time':times[i]})
+    return info
 
-    return route_infos
+if __name__ == '__main__':
+    print(getinfo())
