@@ -3,7 +3,7 @@ import datetime
 from unicodedata import name
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
-from django.contrib.auth import authenticate
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet, RouteInlineFormSetNotDelete # ユーザーアカウントフォーム
 from .models import CustomUser, Delay, Route, UserDelay
 from .routeinfo import getinfo
@@ -12,11 +12,11 @@ dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)
 now = {"year": dt_now_jst.year,"month": dt_now_jst.month,"day": dt_now_jst.day,}
 info = getinfo()
 
-class Home(TemplateView):
+class Home(TemplateView,LoginRequiredMixin):
 
     def __init__(self):
         self.params = {
-            "user_route_ids": [route.id for route in Route.objects.all()],
+            "user_route_ids": [],
             "delays": Delay.objects.all(),
             "delay_ids": [],
             "UserDelayCreate": False,
@@ -97,7 +97,7 @@ class UserRegister(TemplateView):
 
         return render(request, "registration/register.html", context=self.params)
 
-class UserEdit(TemplateView):
+class UserEdit(TemplateView,LoginRequiredMixin):
 
     def __init__(self):
         self.params = {
@@ -148,7 +148,7 @@ class UserEdit(TemplateView):
     def get_object(self):
         return self.request.user
 
-class Routelist(TemplateView):
+class Routelist(TemplateView,LoginRequiredMixin):
 
     def __init__(self):
         self.params = {
@@ -176,7 +176,7 @@ class Routelist(TemplateView):
         self.params["routes"] = Route.objects.all()
         return render(request, "routes/list.html", context=self.params)
 
-class DelayRegister(TemplateView):
+class DelayRegister(TemplateView,LoginRequiredMixin):
 
     def __init__(self):
         self.params = {
@@ -238,7 +238,7 @@ class DelayRegister(TemplateView):
         self.updateinfo()
         return render(request,"delay/register.html", context=self.params)
 
-class UserDelayRegister(TemplateView):
+class UserDelayRegister(TemplateView,LoginRequiredMixin):
 
     def __init__(self):
         self.params = {
@@ -283,7 +283,7 @@ class UserDelayRegister(TemplateView):
 
         return render(request,"userdelay/register.html", context=self.params)
 
-class UserDelayList(TemplateView):
+class UserDelayList(TemplateView,LoginRequiredMixin):
 
     def __init__(self):
         self.params = {
@@ -326,7 +326,7 @@ class UserDelayList(TemplateView):
 
         return render(request,"userdelay/list.html", context=self.params)
 
-class UserDelayHistory(TemplateView):
+class UserDelayHistory(TemplateView,LoginRequiredMixin):
 
     def __init__(self):
         self.params = {
