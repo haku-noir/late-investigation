@@ -24,6 +24,11 @@ class Home(LoginRequiredMixin, TemplateView):
 
     # Get処理
     def get(self,request):
+        if request.user.is_staff:
+            return redirect('/user')
+        if request.user.is_teacher:
+            return redirect('/user/delay')
+
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
@@ -112,7 +117,7 @@ class UserEdit(LoginRequiredMixin, TemplateView):
         self.params["route_formset"] = RouteInlineFormSet(instance=user)
         self.params["UserUpdate"] = False
         self.params["PasswordUpdate"] = False
-        return render(request,"users/edit.html", context=self.params)
+        return render(request,"user/edit.html", context=self.params)
 
     # Post処理
     def post(self,request):
@@ -136,12 +141,12 @@ class UserEdit(LoginRequiredMixin, TemplateView):
                     user.save()
                     self.params["PasswordUpdate"] = True
             else:
-                return render(request, "users/edit.html", context=self.params)
+                return render(request, "user/edit.html", context=self.params)
 
             # アカウント編集情報更新
             self.params["UserUpdate"] = True
 
-        return render(request, "users/edit.html", context=self.params)
+        return render(request, "user/edit.html", context=self.params)
 
     def get_object(self):
         return self.request.user
@@ -160,7 +165,7 @@ class Routelist(LoginRequiredMixin, TemplateView):
             return redirect('/')
 
         self.params["routes"] = Route.objects.all()
-        return render(request,"routes/list.html", context=self.params)
+        return render(request,"route/list.html", context=self.params)
 
     # Post処理
     def post(self,request):
@@ -178,7 +183,7 @@ class Routelist(LoginRequiredMixin, TemplateView):
             Route.objects.get(id=route_id).delete()
 
         self.params["routes"] = Route.objects.all()
-        return render(request, "routes/list.html", context=self.params)
+        return render(request, "route/list.html", context=self.params)
 
 class DelayRegister(LoginRequiredMixin, TemplateView):
 
@@ -342,3 +347,51 @@ class UserDelayHistory(LoginRequiredMixin, TemplateView):
     def get(self,request):
         self.params["userdelays"] = UserDelay.objects.filter(user=request.user)
         return render(request,"userdelay/history.html", context=self.params)
+
+class UserList(LoginRequiredMixin, TemplateView):
+
+    def __init__(self):
+        self.params = {
+            "users": CustomUser.objects.all(),
+            "teacher_ids": [],
+            "FinishUpdate": False
+        }
+
+    # Get処理
+    def get(self,request):
+        if request.user.is_staff is False:
+            return redirect('/')
+
+        self.params["users"] = CustomUser.objects.all()
+        self.params["teacher_ids"] = [user.id for user in CustomUser.objects.filter(is_teacher=True)]
+        self.params["FinishUpdate"] = False
+        return render(request,"user/list.html", context=self.params)
+
+    # Post処理
+    def post(self,request):
+        if request.user.is_staff is False:
+            return redirect('/')
+
+        checked_user_ids = [int(user_id) for user_id in request.POST.getlist("teacher")]
+        teacher_ids = [userdelay.id for userdelay in CustomUser.objects.filter(is_teacher=True)]
+        add_teacher_ids = list(set(checked_user_ids) - set(teacher_ids))
+        delete_teacher_ids = list(set(teacher_ids) - set(checked_user_ids))
+
+        if len(add_teacher_ids) == 0 and len(delete_teacher_ids) == 0:
+            return redirect("/user")
+
+        for teacher_id in add_teacher_ids:
+            user = CustomUser.objects.get(id=teacher_id)
+            user.is_teacher = True
+            user.save()
+
+        for teacher_id in delete_teacher_ids:
+            user = CustomUser.objects.get(id=teacher_id)
+            user.is_teacher = False
+            user.save()
+
+        self.params["users"] = CustomUser.objects.all()
+        self.params["teacher_ids"] = [teacher.id for teacher in CustomUser.objects.filter(is_teacher=True)]
+        self.params["FinishUpdate"] = True
+
+        return render(request,"user/list.html", context=self.params)
