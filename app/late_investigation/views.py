@@ -1,5 +1,6 @@
 
 import datetime
+from unicodedata import name
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.contrib.auth import authenticate
@@ -157,24 +158,22 @@ class Routelist(TemplateView):
 
     # Get処理
     def get(self,request):
-        user = request.user
-        self.params["route_form"] = RouteForm()
         self.params["routes"] = Route.objects.all()
         return render(request,"routes/list.html", context=self.params)
 
     # Post処理
     def post(self,request):
-        self.params["route_form"] = RouteForm(data=request.POST)
-
+        name = request.POST.get("name")
         # フォーム入力の有効検証
-        if self.params["route_form"].is_valid():
+        if name != "":
             # 路線情報をDB保存
-            self.params["route_form"].save()
+            Route(name=name).save()
 
-        else:
-            # フォームが有効でない場合
-            print(self.params["route_form"].errors)
+        checked_route_ids = [int(route_id) for route_id in request.POST.getlist("delete")]
+        for route_id in checked_route_ids:
+            Route.objects.get(id=route_id).delete()
 
+        self.params["routes"] = Route.objects.all()
         return render(request, "routes/list.html", context=self.params)
 
 class DelayRegister(TemplateView):

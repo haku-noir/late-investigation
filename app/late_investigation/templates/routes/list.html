@@ -9,30 +9,27 @@
 {% endblock %}
 
 {% block content %}
-<table class="table table-hover">
-  <thead>
-    <tr>
-      <th scope="col">路線名</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for route in routes %}
-    <tr>
-      <td scope="row">{{ route.name }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-<h4 class="mt-5">路線の追加</h4>
 <form enctype="multipart/form-data" method="post" class="form-group">
   {% csrf_token %}
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">路線名</th>
+        <th scope="col">Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for route in routes %}
+      <tr>
+        <td scope="row">{{ route.name }}</td>
+        <td scope="row"><input type="checkbox" name="delete" value="{{route.id}}"></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <h4 class="mt-5">路線の追加</h4>
   <div class="form-group">
-    <ul class="errorlist">
-    {% for error in route_form.name.errors %}
-      <li>{{ error }}</li>
-    {% endfor %}
-    </ul>
-    <input type="text" class="form-control" required name="name">
+    <input type="text" class="form-control" name="name">
   </div>
   </div>
   <p class="bs-component">
