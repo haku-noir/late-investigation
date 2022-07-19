@@ -1,42 +1,43 @@
 {% extends 'layout.html' %}
 
 {% block title %}
-ユーザ情報編集
+ユーザ編集
 {% endblock %}
 
 {% block banner %}
-<h1>ユーザ情報編集</h1>
+<h1>ユーザ編集</h1>
 {% endblock %}
 
 {% block content %}
-{% if PasswordUpdate %}
-<div class="row my-4">
-  <div class="col-12">
-    <h2>編集完了!</h2>
-  </div>
-  <div class="col-12">
-    <h2>パスワードが変更されたため、再度ログインしてください</h2>
-  </div>
-  <div class="col-12">
-    <a class="btn btn-primary" href="{% url 'login' %}">ログイン</a>
-  </div>
-</div>
-{% else %}
-  {% if UserUpdate %}
+{% if UserUpdate %}
   <div class="row my-4">
     <div class="col-12">
       <h2>編集完了!</h2>
     </div>
+    {% if PasswordUpdate %}
+    <div class="col-12">
+      <h3>パスワードが変更されたため、再度ログインしてください</h3>
+    </div>
+    <div class="col-12">
+      <a class="btn btn-primary" href="{% url 'login' %}">ログイン</a>
+    </div>
+    {% else %}
     <div class="col-12">
       <a class="btn btn-primary" href="{% url 'home' %}">ホームへ</a>
     </div>
+    {% endif %}
   </div>
-  {% else %}
+{% else %}
   <form enctype="multipart/form-data" method="post" class="form-group">
     {% csrf_token %}
     {% for item in user_edit_form %}
     <div class="form-group">
       <label for="{{item.id_for_label}}">{{item.label}}</label>
+      <ul class="errorlist">
+      {% for error in item.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
       <input
         type="{{item.field.widget.input_type}}"
         class="form-control"
@@ -66,6 +67,5 @@
       <input type="submit" class="btn btn-info" value="登録" />
     </p>
   </form>
-  {% endif %}
 {% endif %}
 {% endblock %}

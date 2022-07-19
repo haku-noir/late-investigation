@@ -1,11 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Logout</title>
-  </head>
-  <body>
-    <p class="display-4">You logged out.</p>
-    <a class="lead" href="{% url 'home' %}">Home</a>
-  </body>
-</html>
+{% extends 'layout.html' %}
+
+{% block title %}
+ログアウト
+{% endblock %}
+
+{% block banner %}
+<h1>ログアウト</h1>
+{% endblock %}
+
+{% block content %}
+<div class="row my-4">
+  <div class="col-12">
+    <h3>ログアウトしました</h3>
+  </div>
+  <div class="col-12">
+    <a class="btn btn-primary" href="{% url 'login' %}">ログイン</a>
+  </div>
+</div>
+{% endblock %}

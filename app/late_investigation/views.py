@@ -3,7 +3,7 @@ import datetime
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.contrib.auth import authenticate
-from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet # ユーザーアカウントフォーム
+from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet, RouteInlineFormSetNotDelete # ユーザーアカウントフォーム
 from .models import CustomUser, Delay, Route, UserDelay
 from .routeinfo import getinfo
 
@@ -62,35 +62,37 @@ class UserRegister(TemplateView):
 
     def __init__(self):
         self.params = {
-            "AccountCreate": False,
-            "custom_user_form": CustomUserForm(),
+            "UserCreate": False,
+            "user_form": CustomUserForm(),
+            "route_formset": RouteInlineFormSetNotDelete(),
         }
 
     # Get処理
     def get(self,request):
-        self.params["custom_user_form"] = CustomUserForm()
-        self.params["AccountCreate"] = False
+        self.params["user_form"] = CustomUserForm()
+        self.params["route_formset"] = RouteInlineFormSetNotDelete()
+        self.params["UserCreate"] = False
         return render(request,"registration/register.html", context=self.params)
 
     # Post処理
     def post(self,request):
-        self.params["custom_user_form"] = CustomUserForm(data=request.POST)
+        self.params["user_form"] = CustomUserForm(data=request.POST)
+        self.params["route_formset"] = RouteInlineFormSetNotDelete(data=request.POST)
 
         # フォーム入力の有効検証
-        if self.params["custom_user_form"].is_valid():
-            # アカウント情報をDB保存
-            custom_user = self.params["custom_user_form"].save()
-            # パスワードをハッシュ化
-            custom_user.set_password(custom_user.password)
-            # ハッシュ化パスワード更新
-            custom_user.save()
+        if self.params["user_form"].is_valid():
+            user = self.params["user_form"].save(commit=False)
+            if self.params["route_formset"].is_valid():
+                # パスワードをハッシュ化
+                user.set_password(user.password)
+                # アカウント情報をDB保存
+                user.save()
+                RouteInlineFormSetNotDelete(instance=user,data=request.POST).save()
+            else:
+                return render(request, "registration/register.html", context=self.params)
 
             # アカウント作成情報更新
-            self.params["AccountCreate"] = True
-
-        else:
-            # フォームが有効でない場合
-            print(self.params["custom_user_form"].errors)
+            self.params["UserCreate"] = True
 
         return render(request, "registration/register.html", context=self.params)
 
@@ -100,14 +102,14 @@ class UserEdit(TemplateView):
         self.params = {
             "UserUpdate": False,
             "PasswordUpdate": False,
-            "user_edit_form": CustomUserEditForm(user=None),
+            "user_edit_form": CustomUserEditForm(),
             "route_formset": RouteInlineFormSet(),
         }
 
     # Get処理
     def get(self,request):
         user = request.user
-        self.params["user_edit_form"] = CustomUserEditForm(user=user, instance=user)
+        self.params["user_edit_form"] = CustomUserEditForm(instance=user)
         self.params["route_formset"] = RouteInlineFormSet(instance=user)
         self.params["UserUpdate"] = False
         self.params["PasswordUpdate"] = False
@@ -116,7 +118,7 @@ class UserEdit(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        self.params["user_edit_form"] = CustomUserEditForm(user=user, instance=user, data=request.POST)
+        self.params["user_edit_form"] = CustomUserEditForm(instance=user, data=request.POST)
         self.params["route_formset"] = RouteInlineFormSet(instance=user, data=request.POST)
 
         # フォーム入力の有効検証
@@ -139,10 +141,6 @@ class UserEdit(TemplateView):
 
             # アカウント編集情報更新
             self.params["UserUpdate"] = True
-
-        else:
-            # フォームが有効でない場合
-            print(self.params["user_edit_form"].errors)
 
         return render(request, "users/edit.html", context=self.params)
 

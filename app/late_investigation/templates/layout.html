@@ -7,6 +7,7 @@
   <title>{% block title %}{% endblock %}</title>
   <link rel="icon" type="image/png" href={% static 'img/icon.png' %}>
   <link rel=stylesheet href={% static 'css/style.css' %}>
+  <link rel=stylesheet href={% static 'css/google.css' %}>
   <link rel=stylesheet href={% static 'css/bootstrap.css' %}>
   <link rel=stylesheet href={% static 'css/bootstrap.min.css' %}>
 </head>
@@ -18,15 +19,13 @@
         <a class="navbar-brand" href={% url 'home' %}>
           <img src={% static 'img/logo.png' %} width="120" height="55" class="d-inline-block align-top mr-1" alt="">
         </a>
+        <p class="navbar-brand mb-0">{{ user.number }}: {{ user.last_name }} {{ user.first_name }}</p>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbar">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <p class="navbar-brand mb-0">{{ user.number }}: {{ user.last_name }} {{ user.first_name }}</p>
-            </li>
             <li class="nav-item">
               <a class="nav-link" href={% url 'userdelay_register' %}>遅刻取り消し申請</a>
             </li>
@@ -43,7 +42,7 @@
               <a class="nav-link" href={% url 'route' %}>路線一覧</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href={% url 'user_edit' %}>ユーザ情報編集</a>
+              <a class="nav-link" href={% url 'user_edit' %}>ユーザ編集</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href={% url 'logout' %}>ログアウト</a>
@@ -55,7 +54,7 @@
   </header>
   <div class="container">
     <div class="page-header" id="banner">
-      <div class="row my-4">
+      <div class="row mt-5">
         <div class="col-12">
           {% block banner %}{% endblock %}
         </div>
