@@ -29,21 +29,24 @@
         <div class="collapse navbar-collapse" id="navbar">
           <ul class="navbar-nav mr-auto">
             {% if user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href={% url 'userdelay_register' %}>遅刻取り消し申請</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href={% url 'userdelay_history' %}>申請履歴</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href={% url 'userdelay' %}>遅刻学生一覧</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href={% url 'delay_register' %}>遅延路線登録</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href={% url 'route' %}>路線一覧</a>
-            </li>
+              {% if user.is_teacher %}
+              <li class="nav-item">
+                <a class="nav-link" href={% url 'userdelay' %}>遅刻学生一覧</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href={% url 'delay_register' %}>遅延路線登録</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href={% url 'route' %}>路線一覧</a>
+              </li>
+              {% else %}
+              <li class="nav-item">
+                <a class="nav-link" href={% url 'userdelay_register' %}>遅刻取り消し申請</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href={% url 'userdelay_history' %}>申請履歴</a>
+              </li>
+              {% endif %}
             <li class="nav-item">
               <a class="nav-link" href={% url 'user_edit' %}>ユーザ編集</a>
             </li>
