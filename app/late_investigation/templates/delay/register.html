@@ -1,54 +1,51 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="ja" dir="ltr">
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-    <link rel="stylesheet" href='{% static "App_Folder_css/style.css" %}' />
-  </head>
+{% extends 'layout.html' %}
 
-  <body>
-    <h1>遅延路線登録</h1>
+{% block title %}
+遅延路線登録
+{% endblock %}
 
-    {% if DelayCreate %}
-    <h1>登録完了!</h1>
-    <a href="{% url 'home' %}">TOPページへ</a>
+{% block banner %}
+<h1>遅延路線登録</h1>
+{% endblock %}
 
-    {% else %}
-    <div class="register">
-      <table class="reg_form">
-        <tr>
-          <th>路線名</th>
-          <th>遅延時間</th>
-          <th>遅延認定</th>
-        </tr>
-        <form enctype="multipart/form-data" method="post">
-          {% csrf_token %}
-            {% for info in infos %}
-            <tr>
-              <td>{{ info.route.name }}</td>
-              <td>{{ info.time }}</td>
-              {% if info.route in today_delay_routes %}
-              <td><input type="checkbox" name="checked_delay" value="{{info.route.id}}" checked></td>
-              {% else %}
-              <td><input type="checkbox" name="delay" value="{{info.route.id}}"></td>
-              {% endif %}
-            </tr>
-            {% endfor %}
-          <tr>
-            <td></td>
-            <td></td>
-            <td>
-              <input class="btn" type="submit" name="" value="登録" />
-            </td>
-          </tr>
-        </form>
-      </table>
-      <form enctype="multipart/form-data" method="update">
-        <input class="btn" type="submit" name="" value="更新" />
-      </form>
-    </div>
-    <a href="{% url 'home' %}">TOPページへ</a>
-    {% endif %}
-  </body>
-</html>
+{% block content %}
+{% if DelayCreate %}
+<div class="row my-4">
+  <div class="col-12">
+    <h2>登録完了!</h2>
+  </div>
+  <div class="col-12">
+    <a class="btn btn-primary" href="{% url 'delay_register' %}">戻る</a>
+  </div>
+</div>
+{% else %}
+<form enctype="multipart/form-data" method="post">
+  {% csrf_token %}
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">路線名</th>
+        <th scope="col">遅延時間</th>
+        <th scope="col">遅延認定</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for info in infos %}
+      <tr>
+        <td>{{ info.route.name }}</td>
+        <td>{{ info.time }}</td>
+        {% if info.route in today_delay_routes %}
+        <td><input type="checkbox" name="delay" value="{{info.route.id}}" checked></td>
+        {% else %}
+        <td><input type="checkbox" name="delay" value="{{info.route.id}}"></td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="bs-component">
+    <input type="submit" class="btn btn-info" value="登録" />
+  </p>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,38 +1,39 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="ja" dir="ltr">
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-    <link rel="stylesheet" href='{% static "App_Folder_css/style.css" %}' />
-  </head>
+{% extends 'layout.html' %}
 
-  <body>
-    <h1>路線一覧</h1>
+{% block title %}
+路線一覧
+{% endblock %}
 
-    <table border="1">
+{% block banner %}
+<h1>路線一覧</h1>
+{% endblock %}
+
+{% block content %}
+<form enctype="multipart/form-data" method="post" class="form-group">
+  {% csrf_token %}
+  <table class="table table-hover">
+    <thead>
       <tr>
-        <th>路線名</th>
+        <th scope="col">路線名</th>
+        <th scope="col">Delete</th>
       </tr>
+    </thead>
+    <tbody>
       {% for route in routes %}
       <tr>
-        <td>{{ route.name }}</td>
+        <td scope="row">{{ route.name }}</td>
+        <td scope="row"><input type="checkbox" name="delete" value="{{route.id}}"></td>
       </tr>
       {% endfor %}
-    </table>
-    <div class="register">
-      <table class="reg_form">
-        <form enctype="multipart/form-data" method="post">
-          {% csrf_token %} {{ route_form.as_table }}
-          <tr>
-            <td></td>
-            <td>
-              <input class="btn" type="submit" name="" value="路線追加" />
-            </td>
-          </tr>
-        </form>
-      </table>
-    </div>
-    <a href="{% url 'home' %}">TOPページへ</a>
-  </body>
-</html>
+    </tbody>
+  </table>
+  <h4 class="mt-5">路線の追加</h4>
+  <div class="form-group">
+    <input type="text" class="form-control" name="name">
+  </div>
+  </div>
+  <p class="bs-component">
+    <input type="submit" class="btn btn-info" value="登録" />
+  </p>
+</form>
+{% endblock %}

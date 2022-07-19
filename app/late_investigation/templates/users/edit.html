@@ -1,41 +1,71 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="ja" dir="ltr">
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-    <link rel="stylesheet" href='{% static "App_Folder_css/style.css" %}' />
-  </head>
+{% extends 'layout.html' %}
 
-  <body>
-    <h1>ユーザ情報編集</h1>
+{% block title %}
+ユーザ編集
+{% endblock %}
 
-    {% if AccountChange %}
-    <h1>編集完了!</h1>
-    <a href="{% url 'home' %}">TOPページへ</a>
+{% block banner %}
+<h1>ユーザ編集</h1>
+{% endblock %}
 
-    {% else %}
-    <div class="register">
-      <table class="reg_form">
-        <form enctype="multipart/form-data" method="post">
-          {% csrf_token %} {{ custom_user_edit_form.as_table }}
-          <tr>
-            <td></td>
-            <td><h3>使用している路線の選択</h3></td>
-            {{ route_formset.management_form }}
-            {% for route_forme in route_formset %} {{ route_forme.as_table }}
-            {% endfor %}
-          </tr>
-          <tr>
-            <td></td>
-            <td>
-              <input class="btn" type="submit" name="" value="登録" />
-            </td>
-          </tr>
-        </form>
-      </table>
+{% block content %}
+{% if UserUpdate %}
+  <div class="row my-4">
+    <div class="col-12">
+      <h2>編集完了!</h2>
     </div>
-    <a href="{% url 'home' %}">TOPページへ</a>
+    {% if PasswordUpdate %}
+    <div class="col-12">
+      <h3>パスワードが変更されたため、再度ログインしてください</h3>
+    </div>
+    <div class="col-12">
+      <a class="btn btn-primary" href="{% url 'login' %}">ログイン</a>
+    </div>
+    {% else %}
+    <div class="col-12">
+      <a class="btn btn-primary" href="{% url 'home' %}">ホームへ</a>
+    </div>
     {% endif %}
-  </body>
-</html>
+  </div>
+{% else %}
+  <form enctype="multipart/form-data" method="post" class="form-group">
+    {% csrf_token %}
+    {% for item in user_edit_form %}
+    <div class="form-group">
+      <label for="{{item.id_for_label}}">{{item.label}}</label>
+      <ul class="errorlist">
+      {% for error in item.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+      <input
+        type="{{item.field.widget.input_type}}"
+        class="form-control"
+        {% if item.field.required %}required{% endif %}
+        name="{{item.name}}"
+        id="{{item.id_for_label}}"
+        {% if item.name != "new_password" %}value="{{item.value}}"{% endif %}
+      >
+    </div>
+    {% endfor %}
+    <div class="row">
+      {{ route_formset.management_form }}
+      {% for route_forme in route_formset %}
+      <div class="col-lg-4 col-md-6 col-sm-12 my-2">
+        <div class="card">
+          <div class="card-header">
+            路線登録
+          </div>
+          <div class="card-body">
+            {{ route_forme.as_p }}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+    <p class="bs-component">
+      <input type="submit" class="btn btn-info" value="登録" />
+    </p>
+  </form>
+{% endif %}
+{% endblock %}

@@ -1,9 +1,10 @@
 
 import datetime
-from django.shortcuts import render
+from unicodedata import name
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.contrib.auth import authenticate
-from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet # ユーザーアカウントフォーム
+from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet, RouteInlineFormSetNotDelete # ユーザーアカウントフォーム
 from .models import CustomUser, Delay, Route, UserDelay
 from .routeinfo import getinfo
 
@@ -23,6 +24,8 @@ class Home(TemplateView):
 
     # Get処理
     def get(self,request):
+        if request.user.id is None:
+            return redirect("/login")
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
@@ -32,19 +35,22 @@ class Home(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
         delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
-        unchecked_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
+        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
+        add_delay_ids = list(set(checked_delay_ids) - set(delay_ids))
+        delete_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
 
-        for delay_id in unchecked_delay_ids:
-            delay = Delay.objects.get(id=delay_id)
-            UserDelay.objects.filter(user=user,delay=delay)[0].delete()
+        if len(add_delay_ids) == 0 and len(delete_delay_ids) == 0:
+            return redirect("/")
 
-        add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
         for delay_id in add_delay_ids:
             delay = Delay.objects.filter(id=delay_id)[0]
             if delay.route in user.routes.all():
                 UserDelay(user=user,delay=delay).save()
+
+        for delay_id in delete_delay_ids:
+            delay = Delay.objects.get(id=delay_id)
+            UserDelay.objects.filter(user=user,delay=delay)[0].delete()
 
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
@@ -57,35 +63,37 @@ class UserRegister(TemplateView):
 
     def __init__(self):
         self.params = {
-            "AccountCreate": False,
-            "custom_user_form": CustomUserForm(),
+            "UserCreate": False,
+            "user_form": CustomUserForm(),
+            "route_formset": RouteInlineFormSetNotDelete(),
         }
 
     # Get処理
     def get(self,request):
-        self.params["custom_user_form"] = CustomUserForm()
-        self.params["AccountCreate"] = False
+        self.params["user_form"] = CustomUserForm()
+        self.params["route_formset"] = RouteInlineFormSetNotDelete()
+        self.params["UserCreate"] = False
         return render(request,"registration/register.html", context=self.params)
 
     # Post処理
     def post(self,request):
-        self.params["custom_user_form"] = CustomUserForm(data=request.POST)
+        self.params["user_form"] = CustomUserForm(data=request.POST)
+        self.params["route_formset"] = RouteInlineFormSetNotDelete(data=request.POST)
 
         # フォーム入力の有効検証
-        if self.params["custom_user_form"].is_valid():
-            # アカウント情報をDB保存
-            custom_user = self.params["custom_user_form"].save()
-            # パスワードをハッシュ化
-            custom_user.set_password(custom_user.password)
-            # ハッシュ化パスワード更新
-            custom_user.save()
+        if self.params["user_form"].is_valid():
+            user = self.params["user_form"].save(commit=False)
+            if self.params["route_formset"].is_valid():
+                # パスワードをハッシュ化
+                user.set_password(user.password)
+                # アカウント情報をDB保存
+                user.save()
+                RouteInlineFormSetNotDelete(instance=user,data=request.POST).save()
+            else:
+                return render(request, "registration/register.html", context=self.params)
 
             # アカウント作成情報更新
-            self.params["AccountCreate"] = True
-
-        else:
-            # フォームが有効でない場合
-            print(self.params["custom_user_form"].errors)
+            self.params["UserCreate"] = True
 
         return render(request, "registration/register.html", context=self.params)
 
@@ -93,46 +101,47 @@ class UserEdit(TemplateView):
 
     def __init__(self):
         self.params = {
-            "AccountChange": False,
-            "custom_user_edit_form": CustomUserEditForm(user=None),
+            "UserUpdate": False,
+            "PasswordUpdate": False,
+            "user_edit_form": CustomUserEditForm(),
             "route_formset": RouteInlineFormSet(),
         }
 
     # Get処理
     def get(self,request):
         user = request.user
-        self.params["custom_user_edit_form"] = CustomUserEditForm(user=user, instance=user)
+        self.params["user_edit_form"] = CustomUserEditForm(instance=user)
         self.params["route_formset"] = RouteInlineFormSet(instance=user)
-        self.params["AccountChange"] = False
+        self.params["UserUpdate"] = False
+        self.params["PasswordUpdate"] = False
         return render(request,"users/edit.html", context=self.params)
 
     # Post処理
     def post(self,request):
         user = request.user
-        self.params["custom_user_edit_form"] = CustomUserEditForm(user=user, instance=user, data=request.POST)
+        self.params["user_edit_form"] = CustomUserEditForm(instance=user, data=request.POST)
         self.params["route_formset"] = RouteInlineFormSet(instance=user, data=request.POST)
 
         # フォーム入力の有効検証
-        if self.params["custom_user_edit_form"].is_valid():
+        if self.params["user_edit_form"].is_valid():
             # アカウント情報をDB保存
-            custom_user = self.params["custom_user_edit_form"].save(commit=False)
+            user = self.params["user_edit_form"].save(commit=False)
             if self.params["route_formset"].is_valid():
-                custom_user.save()
+                user.save()
                 self.params["route_formset"].save()
 
-                new_password = self.params["custom_user_edit_form"].cleaned_data.get("new_password")
+                new_password = self.params["user_edit_form"].cleaned_data.get("new_password")
                 if new_password != "":
                     # パスワードをハッシュ化
-                    custom_user.set_password(new_password)
+                    user.set_password(new_password)
                     # ハッシュ化パスワード更新
-                    custom_user.save()
+                    user.save()
+                    self.params["PasswordUpdate"] = True
+            else:
+                return render(request, "users/edit.html", context=self.params)
 
             # アカウント編集情報更新
-            self.params["AccountChange"] = True
-
-        else:
-            # フォームが有効でない場合
-            print(self.params["custom_user_edit_form"].errors)
+            self.params["UserUpdate"] = True
 
         return render(request, "users/edit.html", context=self.params)
 
@@ -149,24 +158,22 @@ class Routelist(TemplateView):
 
     # Get処理
     def get(self,request):
-        user = request.user
-        self.params["route_form"] = RouteForm()
         self.params["routes"] = Route.objects.all()
         return render(request,"routes/list.html", context=self.params)
 
     # Post処理
     def post(self,request):
-        self.params["route_form"] = RouteForm(data=request.POST)
-
+        name = request.POST.get("name")
         # フォーム入力の有効検証
-        if self.params["route_form"].is_valid():
+        if name != "":
             # 路線情報をDB保存
-            self.params["route_form"].save()
+            Route(name=name).save()
 
-        else:
-            # フォームが有効でない場合
-            print(self.params["route_form"].errors)
+        checked_route_ids = [int(route_id) for route_id in request.POST.getlist("delete")]
+        for route_id in checked_route_ids:
+            Route.objects.get(id=route_id).delete()
 
+        self.params["routes"] = Route.objects.all()
         return render(request, "routes/list.html", context=self.params)
 
 class DelayRegister(TemplateView):
@@ -204,18 +211,21 @@ class DelayRegister(TemplateView):
 
     # Post処理
     def post(self,request):
-        self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
-
-        checked_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("checked_delay")]
         delay_route_ids = [route.id for route in self.params["today_delay_routes"]]
-        unchecked_delay_route_ids = list(set(delay_route_ids) - set(checked_delay_route_ids))
-        for route_id in unchecked_delay_route_ids:
-            Delay.objects.filter(route_id=route_id,**now)[0].delete()
+        checked_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("delay")]
+        add_delay_route_ids = list(set(checked_delay_route_ids) - set(delay_route_ids))
+        delete_delay_route_ids = list(set(delay_route_ids) - set(checked_delay_route_ids))
 
-        add_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("delay")]
+        if len(add_delay_route_ids) == 0 and len(delete_delay_route_ids) == 0:
+            return redirect("/delay/register")
+
         for route_id in add_delay_route_ids:
             Delay(route_id=route_id).save()
 
+        for route_id in delete_delay_route_ids:
+            Delay.objects.filter(route_id=route_id,**now)[0].delete()
+
+        self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
         self.params["DelayCreate"] = True
 
         return render(request,"delay/register.html", context=self.params)
@@ -249,19 +259,22 @@ class UserDelayRegister(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_delay")]
         delay_ids = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
-        unchecked_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
+        checked_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
+        add_delay_ids = list(set(checked_delay_ids) - set(delay_ids))
+        delete_delay_ids = list(set(delay_ids) - set(checked_delay_ids))
 
-        for delay_id in unchecked_delay_ids:
-            delay = Delay.objects.get(id=delay_id)
-            UserDelay.objects.filter(user=user,delay=delay)[0].delete()
+        if len(add_delay_ids) == 0 and len(delete_delay_ids) == 0:
+            return redirect("/user/delay/register")
 
-        add_delay_ids = [int(delay_id) for delay_id in request.POST.getlist("delay")]
         for delay_id in add_delay_ids:
             delay = Delay.objects.filter(id=delay_id)[0]
             if delay.route in user.routes.all():
                 UserDelay(user=user,delay=delay).save()
+
+        for delay_id in delete_delay_ids:
+            delay = Delay.objects.get(id=delay_id)
+            UserDelay.objects.filter(user=user,delay=delay)[0].delete()
 
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
@@ -289,19 +302,22 @@ class UserDelayList(TemplateView):
     # Post処理
     def post(self,request):
         user = request.user
-        checked_userdelay_ids = [int(delay_id) for delay_id in request.POST.getlist("checked_finish")]
+        checked_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("finish")]
         finished_userdelay_ids = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
-        unchecked_userdelay_ids = list(set(finished_userdelay_ids) - set(checked_userdelay_ids))
+        add_finished_userdelay_ids = list(set(checked_userdelay_ids) - set(finished_userdelay_ids))
+        delete_finished_userdelay_ids = list(set(finished_userdelay_ids) - set(checked_userdelay_ids))
 
-        for userdelay_id in unchecked_userdelay_ids:
-            userdelay = UserDelay.objects.get(id=userdelay_id)
-            userdelay.is_finished = False
-            userdelay.save()
+        if len(add_finished_userdelay_ids) == 0 and len(delete_finished_userdelay_ids) == 0:
+            return redirect("/user/delay/")
 
-        add_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("finish")]
-        for userdelay_id in add_userdelay_ids:
+        for userdelay_id in add_finished_userdelay_ids:
             userdelay = UserDelay.objects.get(id=userdelay_id)
             userdelay.is_finished = True
+            userdelay.save()
+
+        for userdelay_id in delete_finished_userdelay_ids:
+            userdelay = UserDelay.objects.get(id=userdelay_id)
+            userdelay.is_finished = False
             userdelay.save()
 
         self.params["user_routes"] = user.routes

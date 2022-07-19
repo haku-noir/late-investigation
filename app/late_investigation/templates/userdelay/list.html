@@ -1,57 +1,55 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="ja" dir="ltr">
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-    <link rel="stylesheet" href='{% static "App_Folder_css/style.css" %}' />
-  </head>
+{% extends 'layout.html' %}
 
-  <body>
-    <h1>遅刻学生一覧</h1>
+{% block title %}
+遅刻学生一覧
+{% endblock %}
 
-    {% if FinishUpdate %}
-    <h1>登録完了!</h1>
-    <a href="{% url 'home' %}">TOPページへ</a>
+{% block banner %}
+<h1>遅刻学生一覧</h1>
+{% endblock %}
 
-    {% else %}
-    <div class="register">
-      <table class="reg_form">
-        <tr>
-          <th>日付</th>
-          <th>学生番号</th>
-          <th>名前</th>
-          <th>路線名</th>
-          <th>遅刻取り消し完了</th>
-        </tr>
-        <form enctype="multipart/form-data" method="post">
-          {% csrf_token %}
-            {% for userdelay in userdelays %}
-            <tr>
-              <td>{{userdelay.delay.year}}/{{userdelay.delay.month}}/{{userdelay.delay.day}}</td>
-              <td>{{userdelay.user.number}}</td>
-              <td>{{userdelay.user.last_name}} {{userdelay.user.first_name}}</td>
-              <td>{{ userdelay.delay.route.name }}</td>
-              {% if userdelay.is_finished %}
-              <td><input type="checkbox" name="checked_finish" value="{{userdelay.id}}" checked></td>
-              {% else %}
-              <td><input type="checkbox" name="finish" value="{{userdelay.id}}"></td>
-              {% endif %}
-            </tr>
-            {% endfor %}
-          <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>
-              <input class="btn" type="submit" name="" value="登録" />
-            </td>
-          </tr>
-        </form>
-      </table>
-    </div>
-    <a href="{% url 'home' %}">TOPページへ</a>
-    {% endif %}
-  </body>
-</html>
+{% block content %}
+{% if FinishUpdate %}
+<div class="row my-4">
+  <div class="col-12">
+    <h2>登録完了!</h2>
+  </div>
+  <div class="col-12">
+    <a class="btn btn-primary" href="{% url 'userdelay' %}">戻る</a>
+  </div>
+</div>
+{% else %}
+<form enctype="multipart/form-data" method="post">
+  {% csrf_token %}
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">日付</th>
+        <th scope="col">学生番号</th>
+        <th scope="col">名前</th>
+        <th scope="col">遅延路線名</th>
+        <th scope="col">遅刻取り消し</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for userdelay in userdelays %}
+      <tr>
+        <td scope="row">{{userdelay.delay.year}}/{{userdelay.delay.month}}/{{userdelay.delay.day}}</td>
+        <td scope="row">{{userdelay.user.number}}</td>
+        <td scope="row">{{userdelay.user.last_name}} {{userdelay.user.first_name}}</td>
+        <td scope="row">{{ userdelay.delay.route.name }}</td>
+        {% if userdelay.is_finished %}
+        <td><input type="checkbox" name="finish" value="{{userdelay.id}}" checked></td>
+        {% else %}
+        <td><input type="checkbox" name="finish" value="{{userdelay.id}}"></td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="bs-component">
+    <input type="submit" class="btn btn-info" value="登録" />
+  </p>
+</form>
+{% endif %}
+{% endblock %}
