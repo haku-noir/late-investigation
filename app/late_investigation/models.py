@@ -11,9 +11,8 @@ class Route(models.Model):
         return self.name
 
 class CustomUser(AbstractUser):
-    number = models.PositiveSmallIntegerField("number", default=0)
+    number = models.PositiveSmallIntegerField("number", default=9999)
     is_teacher = models.BooleanField("is_teacher", default=False)
-    is_active = models.BooleanField("is_active", default=True)
     routes = models.ManyToManyField(Route, blank=True)
 
 class Delay(models.Model):
@@ -26,4 +25,5 @@ class Delay(models.Model):
 class UserDelay(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     delay = models.ForeignKey(Delay, on_delete=models.CASCADE)
+    is_checked = models.BooleanField(default=False)
     is_finished = models.BooleanField(default=False)
