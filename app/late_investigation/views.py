@@ -98,46 +98,51 @@ class UserEdit(TemplateView):
 
     def __init__(self):
         self.params = {
-            "AccountChange": False,
-            "custom_user_edit_form": CustomUserEditForm(user=None),
+            "UserUpdate": False,
+            "PasswordUpdate": False,
+            "user_edit_form": CustomUserEditForm(user=None),
             "route_formset": RouteInlineFormSet(),
         }
 
     # Get処理
     def get(self,request):
         user = request.user
-        self.params["custom_user_edit_form"] = CustomUserEditForm(user=user, instance=user)
+        self.params["user_edit_form"] = CustomUserEditForm(user=user, instance=user)
         self.params["route_formset"] = RouteInlineFormSet(instance=user)
-        self.params["AccountChange"] = False
+        self.params["UserUpdate"] = False
+        self.params["PasswordUpdate"] = False
         return render(request,"users/edit.html", context=self.params)
 
     # Post処理
     def post(self,request):
         user = request.user
-        self.params["custom_user_edit_form"] = CustomUserEditForm(user=user, instance=user, data=request.POST)
+        self.params["user_edit_form"] = CustomUserEditForm(user=user, instance=user, data=request.POST)
         self.params["route_formset"] = RouteInlineFormSet(instance=user, data=request.POST)
 
         # フォーム入力の有効検証
-        if self.params["custom_user_edit_form"].is_valid():
+        if self.params["user_edit_form"].is_valid():
             # アカウント情報をDB保存
-            custom_user = self.params["custom_user_edit_form"].save(commit=False)
+            user = self.params["user_edit_form"].save(commit=False)
             if self.params["route_formset"].is_valid():
-                custom_user.save()
+                user.save()
                 self.params["route_formset"].save()
 
-                new_password = self.params["custom_user_edit_form"].cleaned_data.get("new_password")
+                new_password = self.params["user_edit_form"].cleaned_data.get("new_password")
                 if new_password != "":
                     # パスワードをハッシュ化
-                    custom_user.set_password(new_password)
+                    user.set_password(new_password)
                     # ハッシュ化パスワード更新
-                    custom_user.save()
+                    user.save()
+                    self.params["PasswordUpdate"] = True
+            else:
+                return render(request, "users/edit.html", context=self.params)
 
             # アカウント編集情報更新
-            self.params["AccountChange"] = True
+            self.params["UserUpdate"] = True
 
         else:
             # フォームが有効でない場合
-            print(self.params["custom_user_edit_form"].errors)
+            print(self.params["user_edit_form"].errors)
 
         return render(request, "users/edit.html", context=self.params)
 
