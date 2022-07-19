@@ -25,7 +25,7 @@ class Home(LoginRequiredMixin, TemplateView):
     # Get処理
     def get(self,request):
         if request.user.is_staff:
-            return redirect('/user')
+            return redirect('/delay/register')
         if request.user.is_teacher:
             return redirect('/user/delay')
 
@@ -292,8 +292,7 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
     def __init__(self):
         self.params = {
             "userdelays": UserDelay.objects.all(),
-            "finished_userdelay_ids": [],
-            "FinishUpdate": False
+            "UserDelayUpdate": False
         }
 
     # Get処理
@@ -302,8 +301,7 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
             return redirect('/')
 
         self.params["userdelays"] = UserDelay.objects.all()
-        self.params["finished_userdelay_ids"] = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
-        self.params["FinishUpdate"] = False
+        self.params["UserDelayUpdate"] = False
         return render(request,"userdelay/list.html", context=self.params)
 
     # Post処理
@@ -312,13 +310,30 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
         if user.is_teacher is False:
             return redirect('/')
 
-        checked_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("finish")]
-        finished_userdelay_ids = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
-        add_finished_userdelay_ids = list(set(checked_userdelay_ids) - set(finished_userdelay_ids))
-        delete_finished_userdelay_ids = list(set(finished_userdelay_ids) - set(checked_userdelay_ids))
+        checked_checked_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("check")]
+        checked_userdelay_ids = [userdelay.id for userdelay in UserDelay.objects.filter(is_checked=True)]
+        add_checked_userdelay_ids = list(set(checked_checked_userdelay_ids) - set(checked_userdelay_ids))
+        delete_checked_userdelay_ids = list(set(checked_userdelay_ids) - set(checked_checked_userdelay_ids))
 
-        if len(add_finished_userdelay_ids) == 0 and len(delete_finished_userdelay_ids) == 0:
+        checked_finished_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("finish")]
+        finished_userdelay_ids = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
+        add_finished_userdelay_ids = list(set(checked_finished_userdelay_ids) - set(finished_userdelay_ids))
+        delete_finished_userdelay_ids = list(set(finished_userdelay_ids) - set(checked_finished_userdelay_ids))
+
+        checked_is_not_changed = len(add_checked_userdelay_ids) == 0 and len(delete_checked_userdelay_ids) == 0
+        finished_is_not_changed = len(add_finished_userdelay_ids) == 0 and len(delete_finished_userdelay_ids) == 0
+        if checked_is_not_changed and finished_is_not_changed:
             return redirect("/user/delay/")
+
+        for userdelay_id in add_checked_userdelay_ids:
+            userdelay = UserDelay.objects.get(id=userdelay_id)
+            userdelay.is_checked = True
+            userdelay.save()
+
+        for userdelay_id in delete_checked_userdelay_ids:
+            userdelay = UserDelay.objects.get(id=userdelay_id)
+            userdelay.is_checked = False
+            userdelay.save()
 
         for userdelay_id in add_finished_userdelay_ids:
             userdelay = UserDelay.objects.get(id=userdelay_id)
@@ -330,9 +345,8 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
             userdelay.is_finished = False
             userdelay.save()
 
-        self.params["user_routes"] = user.routes
-        self.params["finished_userdelay_ids"] = [userdelay.id for userdelay in UserDelay.objects.filter(is_finished=True)]
-        self.params["FinishUpdate"] = True
+        self.params["userdelays"] = UserDelay.objects.all()
+        self.params["UserDelayUpdate"] = True
 
         return render(request,"userdelay/list.html", context=self.params)
 
@@ -354,7 +368,7 @@ class UserList(LoginRequiredMixin, TemplateView):
         self.params = {
             "users": CustomUser.objects.all(),
             "teacher_ids": [],
-            "FinishUpdate": False
+            "UserUpdate": False
         }
 
     # Get処理
@@ -364,7 +378,7 @@ class UserList(LoginRequiredMixin, TemplateView):
 
         self.params["users"] = CustomUser.objects.all()
         self.params["teacher_ids"] = [user.id for user in CustomUser.objects.filter(is_teacher=True)]
-        self.params["FinishUpdate"] = False
+        self.params["UserUpdate"] = False
         return render(request,"user/list.html", context=self.params)
 
     # Post処理
@@ -392,6 +406,6 @@ class UserList(LoginRequiredMixin, TemplateView):
 
         self.params["users"] = CustomUser.objects.all()
         self.params["teacher_ids"] = [teacher.id for teacher in CustomUser.objects.filter(is_teacher=True)]
-        self.params["FinishUpdate"] = True
+        self.params["UserUpdate"] = True
 
         return render(request,"user/list.html", context=self.params)

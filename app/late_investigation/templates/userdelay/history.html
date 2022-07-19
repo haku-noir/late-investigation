@@ -14,7 +14,7 @@
     <tr>
       <th scope="col">日付</th>
       <th scope="col">路線名</th>
-      <th scope="col">申請状況</th>
+      <th scope="col">遅刻取り消し状況</th>
     </tr>
   </thead>
   <tbody>
@@ -25,7 +25,11 @@
       {% if userdelay.is_finished %}
       <td>取り消し完了</td>
       {% else %}
-      <td>作業中</td>
+        {% if userdelay.is_checked %}
+        <td>担任チェック完了</td>
+        {% else %}
+        <td>担任チェック待ち</td>
+        {% endif %}
       {% endif %}
     </tr>
     {% endfor %}
