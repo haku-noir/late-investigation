@@ -25,7 +25,7 @@ class Home(LoginRequiredMixin, TemplateView):
     # Get処理
     def get(self,request):
         if request.user.is_staff:
-            return redirect('/user')
+            return redirect('/delay/register')
         if request.user.is_teacher:
             return redirect('/user/delay')
 

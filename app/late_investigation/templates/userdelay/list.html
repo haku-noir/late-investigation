@@ -29,7 +29,9 @@
         <th scope="col">名前</th>
         <th scope="col">遅延路線名</th>
         <th scope="col">担任チェック</th>
+        {% if user.is_staff %}
         <th scope="col">遅刻取り消し完了</th>
+        {% endif %}
       </tr>
     </thead>
     <tbody>
@@ -39,16 +41,24 @@
         <td scope="row">{{userdelay.user.number}}</td>
         <td scope="row">{{userdelay.user.last_name}} {{userdelay.user.first_name}}</td>
         <td scope="row">{{ userdelay.delay.route.name }}</td>
-        {% if userdelay.is_checked %}
-        <td><input type="checkbox" name="check" value="{{userdelay.id}}" checked></td>
-        {% if userdelay.is_finished %}
-        <td><input type="checkbox" name="finish" value="{{userdelay.id}}" checked></td>
+        {% if user.is_staff %}
+          {% if userdelay.is_checked %}
+          <td><input type="checkbox" name="check" value="{{userdelay.id}}" checked></td>
+          {% if userdelay.is_finished %}
+          <td><input type="checkbox" name="finish" value="{{userdelay.id}}" checked></td>
+          {% else %}
+          <td><input type="checkbox" name="finish" value="{{userdelay.id}}"></td>
+          {% endif %}
+          {% else %}
+          <td><input type="checkbox" name="check" value="{{userdelay.id}}"></td>
+          <td></td>
+          {% endif %}
         {% else %}
-        <td><input type="checkbox" name="finish" value="{{userdelay.id}}"></td>
-        {% endif %}
-        {% else %}
-        <td><input type="checkbox" name="check" value="{{userdelay.id}}"></td>
-        <td></td>
+          {% if userdelay.is_checked %}
+          <td><input type="checkbox" name="check" value="{{userdelay.id}}" checked></td>
+          {% else %}
+          <td><input type="checkbox" name="check" value="{{userdelay.id}}"></td>
+          {% endif %}
         {% endif %}
       </tr>
       {% endfor %}
