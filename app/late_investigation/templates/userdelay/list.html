@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block banner %}
-<h1>遅刻学生一覧</h1>
+<h1>遅刻学生一覧{% if class_number is not None %}（{{ class_number }}）{% endif %}</h1>
 {% endblock %}
 
 {% block content %}
