@@ -90,7 +90,8 @@ class UserRegister(TemplateView):
 
         number = int(request.POST["number"])
         if number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS:
-            messages.add_message(request, messages.WARNING, "正しい学生番号を入力して下さい")
+            self.set_form_error(request=request)
+            messages.error(request, "正しい学生番号を入力して下さい")
             return render(request, "registration/register.html", context=self.params)
 
         # フォーム入力の有効検証
@@ -108,7 +109,20 @@ class UserRegister(TemplateView):
             messages.add_message(request, messages.SUCCESS, "ユーザ登録成功")
             return redirect("/login")
 
+        self.set_form_error(request=request)
         return render(request, "registration/register.html", context=self.params)
+
+    def set_form_error(self, request):
+        values = self.params["user_form"].errors.get_json_data().values()
+        for value in values:
+            for v in value:
+                messages.error(request, v["message"])
+
+        for route_form in self.params["route_formset"]:
+            values = route_form.errors.get_json_data().values()
+            for value in values:
+                for v in value:
+                    messages.error(request, v["message"])
 
 class UserEdit(LoginRequiredMixin, TemplateView):
 
@@ -122,7 +136,7 @@ class UserEdit(LoginRequiredMixin, TemplateView):
     def get(self,request):
         user = request.user
         if user.is_teacher and user.number not in CLASS_NUMBERS:
-            messages.add_message(request, messages.WARNING, "先生は学生番号に担任のクラス番号を入力して下さい")
+            messages.error(request, "先生は学生番号に担任のクラス番号を入力して下さい")
 
         self.params["user_edit_form"] = CustomUserEditForm(instance=user)
         self.params["route_formset"] = RouteInlineFormSet(instance=user)
@@ -137,10 +151,12 @@ class UserEdit(LoginRequiredMixin, TemplateView):
         number = int(request.POST["number"])
         if user.is_teacher:
             if number in CLASS_NUMBERS:
-                messages.add_message(request, messages.WARNING, "先生は学生番号に担任のクラス番号を入力して下さい")
+                self.set_form_error(request=request)
+                messages.error(request, "先生は学生番号に担任のクラス番号を入力して下さい")
                 return render(request, "user/edit.html", context=self.params)
         elif not user.is_staff and (number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS):
-            messages.add_message(request, messages.WARNING, "正しい学生番号を入力して下さい")
+            self.set_form_error(request=request)
+            messages.error(request, "正しい学生番号を入力して下さい")
             return render(request, "user/edit.html", context=self.params)
 
         # フォーム入力の有効検証
@@ -161,10 +177,21 @@ class UserEdit(LoginRequiredMixin, TemplateView):
                     messages.add_message(request, messages.INFO, "パスワードが変更されたので、再度ログインしてください")
                     redirect("/login")
                 return redirect("/")
-            else:
-                return render(request, "user/edit.html", context=self.params)
 
+        self.set_form_error(request=request)
         return render(request, "user/edit.html", context=self.params)
+
+    def set_form_error(self, request):
+        values = self.params["user_edit_form"].errors.get_json_data().values()
+        for value in values:
+            for v in value:
+                messages.error(request, v["message"])
+
+        for route_form in self.params["route_formset"]:
+            values = route_form.errors.get_json_data().values()
+            for value in values:
+                for v in value:
+                    messages.error(request, v["message"])
 
     def get_object(self):
         return self.request.user
@@ -329,7 +356,7 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
             if user.number in CLASS_NUMBERS:
                 return redirect("/user/delay/?class_number="+str(user.number))
             elif not user.is_staff:
-                messages.add_message(request, messages.WARNING, "正しい学生番号を入力して下さい")
+                messages.error(request, "正しい学生番号を入力して下さい")
                 return redirect("/user/edit", context=self.params)
 
         self.params["class_numbers"] = CLASS_NUMBERS
