@@ -203,7 +203,10 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
         }
 
     def updateinfos(self):
+        dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+        now = {"year": dt_now_jst.year,"month": dt_now_jst.month,"day": dt_now_jst.day,}
         info = getinfo()
+
         routes = Route.objects.all()
         times = [info.get(route.name) if route.name in info else "不明" for route in routes]
         infos = []
@@ -230,6 +233,10 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
     def post(self,request):
         if request.user.is_teacher is False:
             return redirect('/')
+
+        if "update" in request.POST:
+            self.updateinfos()
+            return redirect("/delay/register")
 
         delay_route_ids = [route.id for route in self.params["today_delay_routes"]]
         checked_delay_route_ids = [int(route_id) for route_id in request.POST.getlist("delay")]
