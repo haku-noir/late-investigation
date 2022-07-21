@@ -327,13 +327,15 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
 
         self.params["userdelays"] = UserDelay.objects.all()
         if "class_number" in request.GET:
-            class_number = int(request.GET.get("class_number"))
-            self.params["class_number"] = class_number
-            self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
+            class_number = request.GET.get("class_number")
+            if class_number != "" and int(class_number) in CLASS_NUMBERS:
+                class_number = int(class_number)
+                self.params["class_number"] = class_number
+                self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
         elif user.is_teacher:
             if user.number in CLASS_NUMBERS:
                 return redirect("/user/delay/?class_number="+str(user.number))
-            else:
+            elif not user.is_staff:
                 self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
                 return redirect("/user/edit", context=self.params)
 
@@ -360,7 +362,7 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
         checked_is_not_changed = len(add_checked_userdelay_ids) == 0 and len(delete_checked_userdelay_ids) == 0
         finished_is_not_changed = len(add_finished_userdelay_ids) == 0 and len(delete_finished_userdelay_ids) == 0
         if checked_is_not_changed and finished_is_not_changed:
-            return redirect("/user/delay/")
+            return redirect("/user/delay/" + "?class_number="+request.GET["class_number"] if "class_number" in request.GET else "")
 
         for userdelay_id in add_checked_userdelay_ids:
             userdelay = UserDelay.objects.get(id=userdelay_id)
