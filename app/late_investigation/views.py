@@ -3,6 +3,7 @@ import datetime
 import numbers
 from unicodedata import name
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet, RouteInlineFormSetNotDelete # ユーザーアカウントフォーム
@@ -25,7 +26,6 @@ class Home(LoginRequiredMixin, TemplateView):
             "delays": Delay.objects.all(),
             "is_existed": False,
             "delay_ids": [],
-            "UserDelayCreate": False,
         }
 
     # Get処理
@@ -40,7 +40,6 @@ class Home(LoginRequiredMixin, TemplateView):
         self.params["delays"] = Delay.objects.filter(**now)
         self.params["is_existed"] = len(self.params["delays"]) != 0
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
-        self.params["UserDelayCreate"] = False
         return render(request,"home.html", context=self.params)
 
     # Post処理
@@ -66,15 +65,14 @@ class Home(LoginRequiredMixin, TemplateView):
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.filter(**now)
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
-        self.params["UserDelayCreate"] = True
 
+        messages.add_message(request, messages.SUCCESS, "登録成功")
         return render(request,"home.html", context=self.params)
 
 class UserRegister(TemplateView):
 
     def __init__(self):
         self.params = {
-            "UserCreate": False,
             "user_form": CustomUserForm(),
             "route_formset": RouteInlineFormSetNotDelete(),
         }
@@ -83,7 +81,6 @@ class UserRegister(TemplateView):
     def get(self,request):
         self.params["user_form"] = CustomUserForm()
         self.params["route_formset"] = RouteInlineFormSetNotDelete()
-        self.params["UserCreate"] = False
         return render(request,"registration/register.html", context=self.params)
 
     # Post処理
@@ -93,7 +90,8 @@ class UserRegister(TemplateView):
 
         number = int(request.POST["number"])
         if number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS:
-            self.params["Message"] = "正しい学生番号を入力して下さい"
+            self.set_form_error(request=request)
+            messages.error(request, "正しい学生番号を入力して下さい")
             return render(request, "registration/register.html", context=self.params)
 
         # フォーム入力の有効検証
@@ -108,17 +106,28 @@ class UserRegister(TemplateView):
             else:
                 return render(request, "registration/register.html", context=self.params)
 
-            # アカウント作成情報更新
-            self.params["UserCreate"] = True
+            messages.add_message(request, messages.SUCCESS, "ユーザ登録成功")
+            return redirect("/login")
 
+        self.set_form_error(request=request)
         return render(request, "registration/register.html", context=self.params)
+
+    def set_form_error(self, request):
+        values = self.params["user_form"].errors.get_json_data().values()
+        for value in values:
+            for v in value:
+                messages.error(request, v["message"])
+
+        for route_form in self.params["route_formset"]:
+            values = route_form.errors.get_json_data().values()
+            for value in values:
+                for v in value:
+                    messages.error(request, v["message"])
 
 class UserEdit(LoginRequiredMixin, TemplateView):
 
     def __init__(self):
         self.params = {
-            "UserUpdate": False,
-            "PasswordUpdate": False,
             "user_edit_form": CustomUserEditForm(),
             "route_formset": RouteInlineFormSet(),
         }
@@ -126,10 +135,11 @@ class UserEdit(LoginRequiredMixin, TemplateView):
     # Get処理
     def get(self,request):
         user = request.user
+        if user.is_teacher and user.number not in CLASS_NUMBERS:
+            messages.error(request, "先生は学生番号に担任のクラス番号を入力して下さい")
+
         self.params["user_edit_form"] = CustomUserEditForm(instance=user)
         self.params["route_formset"] = RouteInlineFormSet(instance=user)
-        self.params["UserUpdate"] = False
-        self.params["PasswordUpdate"] = False
         return render(request,"user/edit.html", context=self.params)
 
     # Post処理
@@ -141,10 +151,12 @@ class UserEdit(LoginRequiredMixin, TemplateView):
         number = int(request.POST["number"])
         if user.is_teacher:
             if number in CLASS_NUMBERS:
-                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+                self.set_form_error(request=request)
+                messages.error(request, "先生は学生番号に担任のクラス番号を入力して下さい")
                 return render(request, "user/edit.html", context=self.params)
         elif not user.is_staff and (number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS):
-            self.params["Message"] = "正しい学生番号を入力して下さい"
+            self.set_form_error(request=request)
+            messages.error(request, "正しい学生番号を入力して下さい")
             return render(request, "user/edit.html", context=self.params)
 
         # フォーム入力の有効検証
@@ -154,6 +166,7 @@ class UserEdit(LoginRequiredMixin, TemplateView):
             if self.params["route_formset"].is_valid():
                 user.save()
                 self.params["route_formset"].save()
+                messages.add_message(request, messages.SUCCESS, "ユーザ編集成功")
 
                 new_password = self.params["user_edit_form"].cleaned_data.get("new_password")
                 if new_password != "":
@@ -161,14 +174,24 @@ class UserEdit(LoginRequiredMixin, TemplateView):
                     user.set_password(new_password)
                     # ハッシュ化パスワード更新
                     user.save()
-                    self.params["PasswordUpdate"] = True
-            else:
-                return render(request, "user/edit.html", context=self.params)
+                    messages.add_message(request, messages.INFO, "パスワードが変更されたので、再度ログインしてください")
+                    redirect("/login")
+                return redirect("/")
 
-            # アカウント編集情報更新
-            self.params["UserUpdate"] = True
-
+        self.set_form_error(request=request)
         return render(request, "user/edit.html", context=self.params)
+
+    def set_form_error(self, request):
+        values = self.params["user_edit_form"].errors.get_json_data().values()
+        for value in values:
+            for v in value:
+                messages.error(request, v["message"])
+
+        for route_form in self.params["route_formset"]:
+            values = route_form.errors.get_json_data().values()
+            for value in values:
+                for v in value:
+                    messages.error(request, v["message"])
 
     def get_object(self):
         return self.request.user
@@ -199,6 +222,7 @@ class Routelist(LoginRequiredMixin, TemplateView):
         if name != "":
             # 路線情報をDB保存
             Route(name=name).save()
+            messages.add_message(request, messages.SUCCESS, "登録成功")
 
         checked_route_ids = [int(route_id) for route_id in request.POST.getlist("delete")]
         for route_id in checked_route_ids:
@@ -214,7 +238,6 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
             "infos" : [],
             "today": str(now.get("year"))+"年"+str(now.get("month"))+"月"+str(now.get("day"))+"日",
             "today_delay_routes": [delay.route for delay in Delay.objects.filter(**now)],
-            "DelayCreate": False,
         }
 
     def updateinfos(self):
@@ -235,7 +258,6 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
         self.params["infos"] = infos
         self.params["today"] = str(now.get("year"))+"年"+str(now.get("month"))+"月"+str(now.get("day"))+"日"
         self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
-        self.params["DelayCreate"] = False
         return render(request,"delay/register.html", context=self.params)
 
     # Post処理
@@ -245,6 +267,7 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
 
         if "update" in request.POST:
             self.updateinfos()
+            messages.add_message(request, messages.INFO, "情報の更新が完了しました")
             return redirect("/delay/register")
 
         delay_route_ids = [route.id for route in self.params["today_delay_routes"]]
@@ -262,8 +285,8 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
             Delay.objects.filter(route_id=route_id,**now)[0].delete()
 
         self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
-        self.params["DelayCreate"] = True
 
+        messages.add_message(request, messages.SUCCESS, "登録成功")
         return render(request,"delay/register.html", context=self.params)
 
 class UserDelayRegister(LoginRequiredMixin, TemplateView):
@@ -273,7 +296,6 @@ class UserDelayRegister(LoginRequiredMixin, TemplateView):
             "user_route_ids": [route.id for route in Route.objects.all()],
             "delays": Delay.objects.all(),
             "delay_ids": [],
-            "UserDelayCreate": False,
         }
 
     # Get処理
@@ -281,7 +303,6 @@ class UserDelayRegister(LoginRequiredMixin, TemplateView):
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
-        self.params["UserDelayCreate"] = False
         return render(request,"userdelay/register.html", context=self.params)
 
     # Post処理
@@ -307,8 +328,8 @@ class UserDelayRegister(LoginRequiredMixin, TemplateView):
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.all()
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
-        self.params["UserDelayCreate"] = True
 
+        messages.add_message(request, messages.SUCCESS, "登録成功")
         return render(request,"userdelay/register.html", context=self.params)
 
 class UserDelayList(LoginRequiredMixin, TemplateView):
@@ -316,7 +337,6 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
     def __init__(self):
         self.params = {
             "userdelays": UserDelay.objects.all(),
-            "UserDelayUpdate": False
         }
 
     # Get処理
@@ -336,11 +356,10 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
             if user.number in CLASS_NUMBERS:
                 return redirect("/user/delay/?class_number="+str(user.number))
             elif not user.is_staff:
-                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+                messages.error(request, "正しい学生番号を入力して下さい")
                 return redirect("/user/edit", context=self.params)
 
         self.params["class_numbers"] = CLASS_NUMBERS
-        self.params["UserDelayUpdate"] = False
         return render(request,"userdelay/list.html", context=self.params)
 
     # Post処理
@@ -384,9 +403,7 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
             userdelay.is_finished = False
             userdelay.save()
 
-        self.params["userdelays"] = UserDelay.objects.all()
-        self.params["UserDelayUpdate"] = True
-
+        messages.add_message(request, messages.SUCCESS, "登録成功")
         return render(request,"userdelay/list.html", context=self.params)
 
 class UserDelayHistory(LoginRequiredMixin, TemplateView):
@@ -407,7 +424,6 @@ class UserList(LoginRequiredMixin, TemplateView):
         self.params = {
             "users": CustomUser.objects.all(),
             "teacher_ids": [],
-            "UserUpdate": False
         }
 
     # Get処理
@@ -417,7 +433,6 @@ class UserList(LoginRequiredMixin, TemplateView):
 
         self.params["users"] = CustomUser.objects.all()
         self.params["teacher_ids"] = [user.id for user in CustomUser.objects.filter(is_teacher=True)]
-        self.params["UserUpdate"] = False
         return render(request,"user/list.html", context=self.params)
 
     # Post処理
@@ -445,6 +460,6 @@ class UserList(LoginRequiredMixin, TemplateView):
 
         self.params["users"] = CustomUser.objects.all()
         self.params["teacher_ids"] = [teacher.id for teacher in CustomUser.objects.filter(is_teacher=True)]
-        self.params["UserUpdate"] = True
 
+        messages.add_message(request, messages.SUCCESS, "登録成功")
         return render(request,"user/list.html", context=self.params)

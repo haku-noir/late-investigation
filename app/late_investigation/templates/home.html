@@ -9,16 +9,6 @@
 {% endblock %}
 
 {% block content %}
-{% if UserDelayCreate %}
-<div class="row my-4">
-  <div class="col-12">
-    <h2>登録完了!</h2>
-  </div>
-  <div class="col-12">
-    <a class="btn btn-primary" href="{% url 'home' %}">戻る</a>
-  </div>
-</div>
-{% else %}
 <p class="bs-component">{{ today }}</p>
   {% if is_existed %}
   <form enctype="multipart/form-data" method="post">
@@ -52,5 +42,4 @@
   {% else %}
   <h3>遅延した路線はありません</h3>
   {% endif %}
-{% endif %}
 {% endblock %}

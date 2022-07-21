@@ -9,63 +9,43 @@
 {% endblock %}
 
 {% block content %}
-{% if UserUpdate %}
-  <div class="row my-4">
-    <div class="col-12">
-      <h2>編集完了!</h2>
-    </div>
-    {% if PasswordUpdate %}
-    <div class="col-12">
-      <h3>パスワードが変更されたため、再度ログインしてください</h3>
-    </div>
-    <div class="col-12">
-      <a class="btn btn-primary" href="{% url 'login' %}">ログイン</a>
-    </div>
-    {% else %}
-    <div class="col-12">
-      <a class="btn btn-primary" href="{% url 'home' %}">ホームへ</a>
-    </div>
-    {% endif %}
-  </div>
-{% else %}
-  <form enctype="multipart/form-data" method="post" class="form-group">
-    {% csrf_token %}
-    {% for item in user_edit_form %}
-    <div class="form-group">
-      <label for="{{item.id_for_label}}">{{item.label}}</label>
-      <ul class="errorlist">
-      {% for error in item.errors %}
-        <li>{{ error }}</li>
-      {% endfor %}
-      </ul>
-      <input
-        type="{{item.field.widget.input_type}}"
-        class="form-control"
-        {% if item.field.required %}required{% endif %}
-        name="{{item.name}}"
-        id="{{item.id_for_label}}"
-        {% if item.name != "new_password" %}value="{{item.value}}"{% endif %}
-      >
-    </div>
+<form enctype="multipart/form-data" method="post" class="form-group">
+  {% csrf_token %}
+  {% for item in user_edit_form %}
+  <div class="form-group">
+    <label for="{{item.id_for_label}}">{{item.label}}</label>
+    <ul class="errorlist">
+    {% for error in item.errors %}
+      <li>{{ error }}</li>
     {% endfor %}
-    <div class="row">
-      {{ route_formset.management_form }}
-      {% for route_forme in route_formset %}
-      <div class="col-lg-4 col-md-6 col-sm-12 my-2">
-        <div class="card">
-          <div class="card-header">
-            路線登録
-          </div>
-          <div class="card-body">
-            {{ route_forme.as_p }}
-          </div>
+    </ul>
+    <input
+      type="{{item.field.widget.input_type}}"
+      class="form-control"
+      {% if item.field.required %}required{% endif %}
+      name="{{item.name}}"
+      id="{{item.id_for_label}}"
+      {% if item.name != "new_password" %}value="{{item.value}}"{% endif %}
+    >
+  </div>
+  {% endfor %}
+  <div class="row">
+    {{ route_formset.management_form }}
+    {% for route_forme in route_formset %}
+    <div class="col-lg-4 col-md-6 col-sm-12 my-2">
+      <div class="card">
+        <div class="card-header">
+          路線登録
+        </div>
+        <div class="card-body">
+          {{ route_forme.as_p }}
         </div>
       </div>
-      {% endfor %}
     </div>
-    <p class="bs-component">
-      <input type="submit" class="btn btn-info" value="登録" />
-    </p>
-  </form>
-{% endif %}
+    {% endfor %}
+  </div>
+  <p class="bs-component">
+    <input type="submit" class="btn btn-info" value="登録" />
+  </p>
+</form>
 {% endblock %}
