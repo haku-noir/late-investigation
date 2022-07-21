@@ -3,6 +3,7 @@ import datetime
 import numbers
 from unicodedata import name
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import CustomUserForm, CustomUserEditForm, RouteForm, RouteInlineFormSet, RouteInlineFormSetNotDelete # ユーザーアカウントフォーム
@@ -93,7 +94,7 @@ class UserRegister(TemplateView):
 
         number = int(request.POST["number"])
         if number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS:
-            self.params["Message"] = "正しい学生番号を入力して下さい"
+            messages.add_message(request, messages.WARNING, "正しい学生番号を入力して下さい")
             return render(request, "registration/register.html", context=self.params)
 
         # フォーム入力の有効検証
@@ -126,6 +127,9 @@ class UserEdit(LoginRequiredMixin, TemplateView):
     # Get処理
     def get(self,request):
         user = request.user
+        if user.is_teacher and user.number not in CLASS_NUMBERS:
+            messages.add_message(request, messages.WARNING, "先生は学生番号に担任のクラス番号を入力して下さい")
+
         self.params["user_edit_form"] = CustomUserEditForm(instance=user)
         self.params["route_formset"] = RouteInlineFormSet(instance=user)
         self.params["UserUpdate"] = False
@@ -141,10 +145,10 @@ class UserEdit(LoginRequiredMixin, TemplateView):
         number = int(request.POST["number"])
         if user.is_teacher:
             if number in CLASS_NUMBERS:
-                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+                messages.add_message(request, messages.WARNING, "先生は学生番号に担任のクラス番号を入力して下さい")
                 return render(request, "user/edit.html", context=self.params)
         elif not user.is_staff and (number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS):
-            self.params["Message"] = "正しい学生番号を入力して下さい"
+            messages.add_message(request, messages.WARNING, "正しい学生番号を入力して下さい")
             return render(request, "user/edit.html", context=self.params)
 
         # フォーム入力の有効検証
@@ -336,7 +340,7 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
             if user.number in CLASS_NUMBERS:
                 return redirect("/user/delay/?class_number="+str(user.number))
             elif not user.is_staff:
-                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+                messages.add_message(request, messages.WARNING, "正しい学生番号を入力して下さい")
                 return redirect("/user/edit", context=self.params)
 
         self.params["class_numbers"] = CLASS_NUMBERS
@@ -384,7 +388,6 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
             userdelay.is_finished = False
             userdelay.save()
 
-        self.params["userdelays"] = UserDelay.objects.all()
         self.params["UserDelayUpdate"] = True
 
         return render(request,"userdelay/list.html", context=self.params)
