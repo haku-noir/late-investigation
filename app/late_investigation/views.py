@@ -1,5 +1,6 @@
 
 import datetime
+import numbers
 from unicodedata import name
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
@@ -11,6 +12,9 @@ from .routeinfo import getinfo
 dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
 now = {"year": dt_now_jst.year,"month": dt_now_jst.month,"day": dt_now_jst.day,}
 info = getinfo()
+MAX_GRADE = 7
+MAX_COURSE = 4
+CLASS_NUMBERS = [i*1000 + j*100 for i in range(1, MAX_GRADE+1) for j in range(1, MAX_COURSE+1)]
 
 class Home(LoginRequiredMixin, TemplateView):
 
@@ -30,7 +34,7 @@ class Home(LoginRequiredMixin, TemplateView):
             return redirect('/user/delay')
 
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
-        self.params["delays"] = Delay.objects.all()
+        self.params["delays"] = Delay.objects.filter(**now)
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
         self.params["UserDelayCreate"] = False
         return render(request,"home.html", context=self.params)
@@ -56,7 +60,7 @@ class Home(LoginRequiredMixin, TemplateView):
             UserDelay.objects.filter(user=user,delay=delay)[0].delete()
 
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
-        self.params["delays"] = Delay.objects.all()
+        self.params["delays"] = Delay.objects.filter(**now)
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
         self.params["UserDelayCreate"] = True
 
@@ -125,6 +129,10 @@ class UserEdit(LoginRequiredMixin, TemplateView):
         self.params["user_edit_form"] = CustomUserEditForm(instance=user, data=request.POST)
         self.params["route_formset"] = RouteInlineFormSet(instance=user, data=request.POST)
 
+        if user.is_teacher and int(request.POST["number"]) not in CLASS_NUMBERS:
+            self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+            return render(request, "user/edit.html", context=self.params)
+
         # フォーム入力の有効検証
         if self.params["user_edit_form"].is_valid():
             # アカウント情報をDB保存
@@ -161,7 +169,7 @@ class Routelist(LoginRequiredMixin, TemplateView):
 
     # Get処理
     def get(self,request):
-        if request.user.is_teacher is False:
+        if request.user.is_staff is False:
             return redirect('/')
 
         self.params["routes"] = Route.objects.all()
@@ -169,7 +177,7 @@ class Routelist(LoginRequiredMixin, TemplateView):
 
     # Post処理
     def post(self,request):
-        if request.user.is_teacher is False:
+        if request.user.is_staff is False:
             return redirect('/')
 
         name = request.POST.get("name")
@@ -205,7 +213,7 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
 
     # Get処理
     def get(self,request):
-        if request.user.is_teacher is False:
+        if request.user.is_staff is False:
             return redirect('/')
 
         routes = Route.objects.all()
@@ -297,17 +305,30 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
 
     # Get処理
     def get(self,request):
-        if request.user.is_teacher is False:
+        user = request.user
+        if not user.is_staff and not user.is_teacher:
             return redirect('/')
 
         self.params["userdelays"] = UserDelay.objects.all()
+        if "class_number" in request.GET:
+            class_number = int(request.GET.get("class_number"))
+            self.params["class_number"] = class_number
+            self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
+        elif user.is_teacher:
+            if user.number in CLASS_NUMBERS:
+                return redirect("/user/delay/?class_number="+str(user.number))
+            else:
+                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+                return redirect("/user/edit", context=self.params)
+
+        self.params["class_numbers"] = CLASS_NUMBERS
         self.params["UserDelayUpdate"] = False
         return render(request,"userdelay/list.html", context=self.params)
 
     # Post処理
     def post(self,request):
         user = request.user
-        if user.is_teacher is False:
+        if user.is_staff is False and user.is_teacher is False:
             return redirect('/')
 
         checked_checked_userdelay_ids = [int(userdelay_id) for userdelay_id in request.POST.getlist("check")]
