@@ -91,6 +91,11 @@ class UserRegister(TemplateView):
         self.params["user_form"] = CustomUserForm(data=request.POST)
         self.params["route_formset"] = RouteInlineFormSetNotDelete(data=request.POST)
 
+        number = int(request.POST["number"])
+        if number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS:
+            self.params["Message"] = "正しい学生番号を入力して下さい"
+            return render(request, "registration/register.html", context=self.params)
+
         # フォーム入力の有効検証
         if self.params["user_form"].is_valid():
             user = self.params["user_form"].save(commit=False)
@@ -133,8 +138,13 @@ class UserEdit(LoginRequiredMixin, TemplateView):
         self.params["user_edit_form"] = CustomUserEditForm(instance=user, data=request.POST)
         self.params["route_formset"] = RouteInlineFormSet(instance=user, data=request.POST)
 
-        if user.is_teacher and int(request.POST["number"]) not in CLASS_NUMBERS:
-            self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+        number = int(request.POST["number"])
+        if user.is_teacher:
+            if number in CLASS_NUMBERS:
+                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+                return render(request, "user/edit.html", context=self.params)
+        elif not user.is_staff and (number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS):
+            self.params["Message"] = "正しい学生番号を入力して下さい"
             return render(request, "user/edit.html", context=self.params)
 
         # フォーム入力の有効検証
