@@ -19,33 +19,38 @@
   </div>
 </div>
 {% else %}
-<form enctype="multipart/form-data" method="post">
-  {% csrf_token %}
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th scope="col">路線名</th>
-        <th scope="col">遅刻取り消し申請</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for delay in delays %}
-      <tr>
-        <td scope="row">{{ delay.route.name }}</td>
-        {% if delay.route.id in user_route_ids %}
-          {% if delay.id in delay_ids  %}
-          <td><input type="checkbox" name="delay" value="{{delay.id}}" checked></td>
-          {% else %}
-          <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
+<p class="bs-component">{{ today }}</p>
+  {% if is_existed %}
+  <form enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col">路線名</th>
+          <th scope="col">遅刻取り消し申請</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for delay in delays %}
+        <tr>
+          <td scope="row">{{ delay.route.name }}</td>
+          {% if delay.route.id in user_route_ids %}
+            {% if delay.id in delay_ids  %}
+            <td><input type="checkbox" name="delay" value="{{delay.id}}" checked></td>
+            {% else %}
+            <td><input type="checkbox" name="delay" value="{{delay.id}}"></td>
+            {% endif %}
           {% endif %}
-        {% endif %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <p class="bs-component">
-    <input type="submit" class="btn btn-info" value="登録" />
-  </p>
-</form>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="bs-component">
+      <input type="submit" class="btn btn-info" value="登録" />
+    </p>
+  </form>
+  {% else %}
+  <h3>遅延した路線はありません</h3>
+  {% endif %}
 {% endif %}
 {% endblock %}

@@ -19,6 +19,14 @@
   </div>
 </div>
 {% else %}
+<form method="post">
+  <div class="form-group">
+    {% csrf_token %}
+    {{ today }}現在
+    <input type="hidden" name="update" value="True"/>
+    <input type="submit" class="btn btn-outline-primary mx-2" value="更新" />
+  </div>
+</form>
 <form enctype="multipart/form-data" method="post">
   {% csrf_token %}
   <table class="table table-hover">
