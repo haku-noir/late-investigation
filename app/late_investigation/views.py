@@ -306,24 +306,22 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
     # Get処理
     def get(self,request):
         user = request.user
-        if user.is_staff:
-            self.params["userdelays"] = UserDelay.objects.all()
-            if "class_number" in request.GET:
-                class_number = int(request.GET.get("class_number"))
-                self.params["class_number"] = class_number
-                self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
-            self.params["class_numbers"] = CLASS_NUMBERS
-        elif user.is_teacher:
-            if user.number not in CLASS_NUMBERS:
-                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
-                return redirect("/user/edit", context=self.params)
-            class_number = user.number
-
-            self.params["class_number"] = class_number
-            self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
-        else:
+        if not user.is_staff and not user.is_teacher:
             return redirect('/')
 
+        self.params["userdelays"] = UserDelay.objects.all()
+        if "class_number" in request.GET:
+            class_number = int(request.GET.get("class_number"))
+            self.params["class_number"] = class_number
+            self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
+        elif user.is_teacher:
+            if user.number in CLASS_NUMBERS:
+                return redirect("/user/delay/?class_number="+str(user.number))
+            else:
+                self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
+                return redirect("/user/edit", context=self.params)
+
+        self.params["class_numbers"] = CLASS_NUMBERS
         self.params["UserDelayUpdate"] = False
         return render(request,"userdelay/list.html", context=self.params)
 
