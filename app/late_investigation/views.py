@@ -308,21 +308,24 @@ class UserDelayList(LoginRequiredMixin, TemplateView):
         user = request.user
         if user.is_staff:
             self.params["userdelays"] = UserDelay.objects.all()
-            self.params["UserDelayUpdate"] = False
-            return render(request,"userdelay/list.html", context=self.params)
+            if "class_number" in request.GET:
+                class_number = int(request.GET.get("class_number"))
+                self.params["class_number"] = class_number
+                self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
+            self.params["class_numbers"] = CLASS_NUMBERS
         elif user.is_teacher:
             if user.number not in CLASS_NUMBERS:
                 self.params["Message"] = "先生は学生番号に担任のクラス番号を入力して下さい"
                 return redirect("/user/edit", context=self.params)
             class_number = user.number
-            class_number = class_number // 100
 
-            self.params["class_number"] = class_number * 100
-            self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number]
-            self.params["UserDelayUpdate"] = False
-            return render(request,"userdelay/list.html", context=self.params)
+            self.params["class_number"] = class_number
+            self.params["userdelays"] = [userdelay for userdelay in UserDelay.objects.all() if userdelay.user.number // 100 == class_number // 100]
         else:
             return redirect('/')
+
+        self.params["UserDelayUpdate"] = False
+        return render(request,"userdelay/list.html", context=self.params)
 
     # Post処理
     def post(self,request):
