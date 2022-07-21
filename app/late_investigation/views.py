@@ -20,8 +20,10 @@ class Home(LoginRequiredMixin, TemplateView):
 
     def __init__(self):
         self.params = {
+            "today": str(now.get("year"))+"年"+str(now.get("month"))+"月"+str(now.get("day"))+"日",
             "user_route_ids": [],
             "delays": Delay.objects.all(),
+            "is_existed": False,
             "delay_ids": [],
             "UserDelayCreate": False,
         }
@@ -33,8 +35,10 @@ class Home(LoginRequiredMixin, TemplateView):
         if request.user.is_teacher:
             return redirect('/user/delay')
 
+        self.params["today"] = str(now.get("year"))+"年"+str(now.get("month"))+"月"+str(now.get("day"))+"日"
         self.params["user_route_ids"] = [route.id for route in request.user.routes.all()]
         self.params["delays"] = Delay.objects.filter(**now)
+        self.params["is_existed"] = len(self.params["delays"]) != 0
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=request.user)]
         self.params["UserDelayCreate"] = False
         return render(request,"home.html", context=self.params)
@@ -198,6 +202,7 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
     def __init__(self):
         self.params = {
             "infos" : [],
+            "today": str(now.get("year"))+"年"+str(now.get("month"))+"月"+str(now.get("day"))+"日",
             "today_delay_routes": [delay.route for delay in Delay.objects.filter(**now)],
             "DelayCreate": False,
         }
@@ -206,13 +211,6 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
         dt_now_jst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
         now = {"year": dt_now_jst.year,"month": dt_now_jst.month,"day": dt_now_jst.day,}
         info = getinfo()
-
-        routes = Route.objects.all()
-        times = [info.get(route.name) if route.name in info else "不明" for route in routes]
-        infos = []
-        for i in range(len(routes)):
-            infos.append({'route':routes[i], 'time':times[i]})
-        self.params["infos"] = infos
 
     # Get処理
     def get(self,request):
@@ -225,6 +223,7 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
         for i in range(len(routes)):
             infos.append({'route':routes[i], 'time':times[i]})
         self.params["infos"] = infos
+        self.params["today"] = str(now.get("year"))+"年"+str(now.get("month"))+"月"+str(now.get("day"))+"日"
         self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
         self.params["DelayCreate"] = False
         return render(request,"delay/register.html", context=self.params)
