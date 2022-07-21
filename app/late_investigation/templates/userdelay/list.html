@@ -9,16 +9,6 @@
 {% endblock %}
 
 {% block content %}
-{% if UserDelayUpdate %}
-<div class="row my-4">
-  <div class="col-12">
-    <h2>登録完了!</h2>
-  </div>
-  <div class="col-12">
-    <a class="btn btn-primary" href="{% url 'userdelay' %}">戻る</a>
-  </div>
-</div>
-{% else %}
 {% if user.is_staff %}
 <form method="get">
   <div class="form-group">
@@ -84,5 +74,4 @@
     <input type="submit" class="btn btn-info" value="登録" />
   </p>
 </form>
-{% endif %}
 {% endblock %}
