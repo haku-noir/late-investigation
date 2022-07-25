@@ -19,3 +19,15 @@ services:
     depends_on:
       - db
     working_dir: /workdir
+    environment:
+      - SECRET_KEY
+      - DEBUG
+      - SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+      - SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+      - DATABASE_URL
+      - DATABASE_ENGINE
+      - DATABASE_NAME
+      - DATABASE_USER
+      - DATABASE_PASSWORD
+      - DATABASE_HOST
+      - DATABASE_PORT
