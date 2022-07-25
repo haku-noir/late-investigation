@@ -67,7 +67,7 @@ class Home(LoginRequiredMixin, TemplateView):
         self.params["delay_ids"] = [userdelay.delay.id for userdelay in UserDelay.objects.filter(user=user)]
 
         messages.add_message(request, messages.SUCCESS, "登録成功")
-        return render(request,"home.html", context=self.params)
+        return redirect("/")
 
 class UserRegister(TemplateView):
 
@@ -89,7 +89,7 @@ class UserRegister(TemplateView):
         self.params["route_formset"] = RouteInlineFormSetNotDelete(data=request.POST)
 
         number = int(request.POST["number"])
-        if number in CLASS_NUMBERS or number // 100 * 100 not in CLASS_NUMBERS:
+        if number // 100 * 100 not in CLASS_NUMBERS:
             self.set_form_error(request=request)
             messages.error(request, "正しい学生番号を入力して下さい")
             return render(request, "registration/register.html", context=self.params)
@@ -262,7 +262,7 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
 
     # Post処理
     def post(self,request):
-        if request.user.is_teacher is False:
+        if request.user.is_staff is False:
             return redirect('/')
 
         if "update" in request.POST:
@@ -287,7 +287,7 @@ class DelayRegister(LoginRequiredMixin, TemplateView):
         self.params["today_delay_routes"] = [delay.route for delay in Delay.objects.filter(**now)]
 
         messages.add_message(request, messages.SUCCESS, "登録成功")
-        return render(request,"delay/register.html", context=self.params)
+        return redirect("/delay/register")
 
 class UserDelayRegister(LoginRequiredMixin, TemplateView):
 
